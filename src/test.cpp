@@ -8,8 +8,7 @@ using namespace arma;
 // [[Rcpp::plugins(cpp11)]]
 
 std::vector<double> custom_Pow( const std::vector<double> base,
-                                const std::vector<double> expo )
-{
+                                const std::vector<double> expo ) {
   // This function is a vectorised version of std::pow
   // Each element on the base vector is raised to the corresponding element in the expo vector
   // This function requires cpp11 plugin
@@ -25,8 +24,7 @@ std::vector<double> custom_Pow( const std::vector<double> base,
 arma::mat ProbsV_Cpp_old( arma::rowvec v_S_t,
                           int& n_I,
                           int& n_S,
-                          NumericVector& t_P )
-{
+                          NumericVector& t_P ) {
   // v_S_t: numeric vector containing the health states occupied by the individuals at cycle t
   // n_I: number of simulated individuals
   // n_S: number of health states
@@ -160,10 +158,10 @@ arma::mat SampleV_Cpp_old( arma::mat m_P_t,
 }
 
 // [[Rcpp::export]]
-arma::mat SampleV_Cpp2( arma::mat& m_P_t,
-                        int& n_I,
-                        int& n_S,
-                        int m = 1) {
+arma::mat SampleV_Cpp( arma::mat& m_P_t,
+                       int& n_I,
+                       int& n_S,
+                       int m = 1) {
   // m_P_t: numeric matrix containing the transition probabilities for individuals at cycle t
   // n_I: number of simulated individuals.
   // n_S: number of health states.
@@ -191,7 +189,7 @@ arma::mat SampleV_Cpp2( arma::mat& m_P_t,
   arma::mat m_U(n_I, n_S, fill::ones) ;
   for(int i = 0; i < m; i++) {
     // in each row, sample one random value for n_I individuals and repeat that value n_S times
-    m_U = arma::repmat( randu<colvec>(n_I), 1, n_S ) ;
+    m_U = arma::repmat( arma::randu<colvec>(n_I), 1, n_S ) ;
     
     // identify the first individual-specific health-state with a cumulative probability higher than the their corresponding sampled value
     // using a logical (true/false or 1/0), matrix get the value to be added to 1 (the starting health-state)
@@ -203,12 +201,11 @@ arma::mat SampleV_Cpp2( arma::mat& m_P_t,
 }
 
 // [[Rcpp::export]]
-arma::colvec CostsV_Cpp( arma::colvec v_S_t,
-                         int& n_I,
-                         int& n_S,
-                         NumericVector& v_Costs,
-                         bool b_Trt = false )
-{
+arma::colvec CostsV_Cpp_old( arma::colvec v_S_t,
+                             int& n_I,
+                             int& n_S,
+                             NumericVector& v_Costs,
+                             bool b_Trt = false ) {
   // v_S_t: vector of health states occupied by individuals at cycle t
   // n_I: number of simulated individuals.
   // n_S: number of health states.
@@ -232,13 +229,27 @@ arma::colvec CostsV_Cpp( arma::colvec v_S_t,
 }
 
 // [[Rcpp::export]]
-arma::colvec EffsV_Cpp( arma::colvec v_S_t,
-                        int& n_I,
-                        int& n_S,
-                        NumericVector& v_Utilities,
-                        bool b_Trt = false,
-                        int cl = 1 )
-{
+arma::colvec CostsV_Cpp( arma::colvec& v_S_t,
+                         arma::vec& v_Costs) {
+  // v_S_t: vector of health states occupied by individuals at cycle t.
+  // v_Costs: a vector containing cost parameters.
+  
+  // Transforming state occupancy to allign with C++ indexing:
+  arma::uvec uv_indices = arma::conv_to<arma::uvec>::from(v_S_t - 1) ;
+  
+  // Use states indecies to assign costs correctly:
+  arma::colvec v_col_costs = v_Costs.elem(uv_indices) ;
+  
+  return(v_col_costs) ;
+}
+
+// [[Rcpp::export]]
+arma::colvec EffsV_Cpp_old( arma::colvec v_S_t,
+                            int& n_I,
+                            int& n_S,
+                            NumericVector& v_Utilities,
+                            bool b_Trt = false,
+                            int cl = 1 ) {
   // v_S_t: vector of health states occupied by individuals at cycle t
   // n_I: number of simulated individuals.
   // n_S: number of health states.
@@ -260,6 +271,26 @@ arma::colvec EffsV_Cpp( arma::colvec v_S_t,
   m_E_t.rows ( arma::find( v_S_t == 3 ) ) = m_S2.rows ( arma::find( v_S_t == 3 ) ) ;
   
   return(m_E_t.col(0)) ;
+}
+
+// [[Rcpp::export]]
+arma::colvec EffsV_Cpp( arma::colvec& v_S_t,
+                        arma::vec& v_Utilities,
+                        int cycle = 1 ) {
+  // v_S_t: vector of health states occupied by individuals at cycle t.
+  // v_Utilities: a vector containing utilities values for each health state.
+  // cycle: integer variable indicating cycle length in years - default is 1.
+  
+  // Transforming state occupancy to allign with C++ indexing:
+  arma::uvec uv_indices = arma::conv_to<arma::uvec>::from(v_S_t - 1) ;
+  
+  // Calculating QALYs, multiplying utilities by the length of the cycle length:
+  arma::vec v_QALYs = v_Utilities * cycle ;
+  
+  // Use states indecies to assign utilities correctly:
+  arma::colvec v_col_QALYs = v_QALYs.elem(uv_indices) ;
+  
+  return(v_col_QALYs) ;
 }
 
 /************* Micro-simulation ***************/

@@ -57,6 +57,21 @@ m_t_p <- matrix(
   byrow = TRUE
 )
 
+# R function:----
+Probs <- function(M_it) { 
+  # M_it:    health state occupied by individual i at cycle t (character variable)
+  
+  m.p.it <- matrix(NA, n.s, n.i)     # create vector of state transition probabilities
+  rownames(m.p.it) <- v.n            # assign names to the vector
+  
+  # update the v.p with the appropriate probabilities   
+  m.p.it[,M_it == "H"]  <- c(1 - p.HS1 - p.HD, p.HS1, 0, p.HD)                  # transition probabilities when healthy
+  m.p.it[,M_it == "S1"] <- c(p.S1H, 1- p.S1H - p.S1S2 - p.S1D, p.S1S2, p.S1D)   # transition probabilities when sick
+  m.p.it[,M_it == "S2"] <- c(0, 0, 1 - p.S2D, p.S2D)                            # transition probabilities when sicker
+  m.p.it[,M_it == "D"]  <- c(0, 0, 0, 1)                                        # transition probabilities when dead   
+  ifelse(colSums(m.p.it) == 1, return(t(m.p.it)), print("Probabilities do not sum to 1")) # return the transition probabilities or produce an error
+}       
+
 # Code dependencies:----
 depends <- c("RcppArmadillo")
 plugins <- c("cpp11", "cpp17")
@@ -725,6 +740,9 @@ for (code in cpp_functions_defs) {
 }
 
 # Test Rcpp functions:----
+testR <- Probs(
+  M_it = v.M_1
+)
 test1 <- ProbsV_Cpp(
   v_S_t = v_M_1,
   n_I = n.i,
@@ -806,6 +824,9 @@ test8 <- ProbsV_Cpp8(
 # Compare functions:----
 results <- microbenchmark::microbenchmark(
   times = 1000,
+  "ProbsV_R" = Probs(
+    M_it = v.M_1
+  ),
   "ProbsV_Cpp" = ProbsV_Cpp(
     v_S_t = v_M_1,
     n_I = n.i,

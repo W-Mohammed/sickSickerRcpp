@@ -58,6 +58,28 @@ m_t_p <- matrix(
   byrow = TRUE
 )
 
+# R function:----
+samplev <- function (probs, m) {
+  d <- dim(probs)
+  n <- d[1]
+  k <- d[2]
+  lev <- dimnames(probs)[[2]]
+  if (!length(lev)) 
+    lev <- 1:k
+  ran <- matrix(lev[1], ncol = m, nrow = n)
+  U <- t(probs)
+  for(i in 2:k) {
+    U[i, ] <- U[i, ] + U[i - 1, ]
+  }
+  if (any((U[k, ] - 1) > 1e-05))
+    stop("error in multinom: probabilities do not sum to 1")
+  
+  for (j in 1:m) {
+    un <- rep(runif(n), rep(k, n))
+    ran[, j] <- lev[1 + colSums(un > U)]
+  }
+  ran
+}
 # Code dependencies:----
 depends <- c("RcppArmadillo")
 plugins <- c("cpp11", "cpp17")
@@ -206,7 +228,7 @@ code2 <-
   arma::mat m_U(n_I, n_S, fill::ones) ;
   for(int i = 0; i < m; i++) {
     // in each row, sample one random value for n_I individuals and repeat that value n_S times
-    m_U = arma::repmat( randu<colvec>(n_I), 1, n_S ) ;
+    m_U = arma::repmat( arma::randu<colvec>(n_I), 1, n_S ) ;
     
     // identify the first individual-specific health-state with a cumulative probability higher than the their corresponding sampled value
     // using a logical (true/false or 1/0), matrix get the value to be added to 1 (the starting health-state)
@@ -233,6 +255,11 @@ for (code in cpp_functions_defs) {
 
 # Test Rcpp functions:----
 set.seed(seed_no)
+test <- samplev(
+  m_P_t,
+  1
+)
+set.seed(seed_no)
 test1 <- SampleV_Cpp(
   m_P_t = m_P_t,
   n_I = n.i,
@@ -249,6 +276,10 @@ test2 <- SampleV_Cpp2(
 # Compare functions:----
 results <- microbenchmark::microbenchmark(
   times = 100,
+  "SampleV_R" = samplev(
+    m_P_t,
+    1
+  ),
   "SampleV_Cpp" = SampleV_Cpp(
     m_P_t = m_P_t,
     n_I = n.i,
