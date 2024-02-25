@@ -238,10 +238,49 @@ code2 <-
   
   return(m_M_t) ;
 }'
+## Code 3 - SampleV:----
+code3 <- 
+  'arma::colvec SampleV_Cpp3( arma::mat& m_P_t,
+                       int& n_I,
+                       int& n_S) {
+  // m_P_t: numeric matrix containing the transition probabilities for individuals at cycle t
+  // n_I: number of simulated individuals.
+  // n_S: number of health states.
+  
+  // create m_CumProb_t matrix with row-wise cumlative transition probabilities:
+  arma::mat m_CumProb_t = arma::cumsum(m_P_t, 1) ;
+  
+  // create a column vector for sampled health states (v_s_t):
+  arma::colvec v_s_t = arma::ones<arma::colvec>(n_I) ;
+  
+  // recheck the probabilities:
+  // need to round up to the 1e-6, otherwise it breaks
+  // Rounding to the 6th decimal place
+  int n = 6 ;
+  arma::colvec v_CumProb_t = arma::round(m_CumProb_t.col(m_CumProb_t.n_cols - 1) * 
+    std::pow(10, n)) / std::pow(10, n) ;
+  bool notSumToOne = arma::any(v_CumProb_t != 1.000000) ;
+  
+  if(notSumToOne) {
+    stop("error in multinom: probabilities do not sum to 1") ;
+  }
+  
+  // Initialise a matrix to save values sampled from the U~(0, 1)  
+  arma::mat m_U(n_I, n_S, fill::ones) ;
+  // in each row, sample one random value for n_I individuals and repeat that value n_S times
+  m_U = arma::repmat( arma::randu<colvec>(n_I), 1, n_S ) ;
+    
+  // identify the first individual-specific health-state with a cumulative probability higher than the their corresponding sampled value
+  // using a logical (true/false or 1/0), matrix get the value to be added to 1 (the starting health-state)
+  // one plus the sum of each row of the logical matrix gives the health-state for the corresponding individuals at time t + 1
+  v_s_t = v_s_t + arma::sum( (m_U > m_CumProb_t), 1 ) ;
+  
+  return(v_s_t) ;
+}'
 
 # Compile C++ code:----
 cpp_functions_defs <- list(
-  code1, code2
+  code1, code2, code3
 )
 
 for (code in cpp_functions_defs) {
@@ -273,6 +312,12 @@ test2 <- SampleV_Cpp2(
   n_S = n.s,
   m = 1
 )
+set.seed(seed_no)
+test3 <- SampleV_Cpp3(
+  m_P_t = m_P_t,
+  n_I = n.i,
+  n_S = n.s
+)
 # Compare functions:----
 results <- microbenchmark::microbenchmark(
   times = 100,
@@ -291,6 +336,11 @@ results <- microbenchmark::microbenchmark(
     n_I = n.i,
     n_S = n.s,
     m = 1
+  ),
+  "SampleV_Cpp3" = SampleV_Cpp3(
+    m_P_t = m_P_t,
+    n_I = n.i,
+    n_S = n.s
   )
 )
 

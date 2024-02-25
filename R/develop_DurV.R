@@ -208,10 +208,83 @@ code4 <-
     m_t_states.col(i) = state_col ;
   }
 }'
+## Code 5 - time_in_states:----
+### Returns the matrix manipulated by the function
+code5 <- 
+  'arma::mat time_in_state5( arma::mat& m_t_states,
+                        const arma::colvec& v_S_t,
+                        const std::vector<int>& v_tracked_states) {
+  // m_t_states: matrix storing times spent in each health state.
+  // v_S_t: vector of health states occupied by individuals at cycle t.
+  // v_tracked_states: vector of health states in which to track time.
+
+  // Track time if in tracked states:
+  for(int s : v_tracked_states) {
+    // Rescale states numerical identifier (s) to C++ index (i):
+    int i = s - 1 ;
+    
+    // Create a logical vector where state matches s:
+    arma::uvec other_states = arma::find(v_S_t != s) ;
+
+    // Copy column data to a temporary vector:
+    arma::vec state_col = m_t_states.col(i) ;
+    
+    // Increment the time for all individuals in the column.
+    state_col += 1 ;
+    
+    // Ensure other_states has valid indices within the range of tmp_col
+    if (!other_states.empty()) {
+      // Reset time in other states to 0 using .elem():
+      state_col.elem(other_states).fill(0) ;
+    }
+    
+    // Record time back to states time matrix:
+    m_t_states.col(i) = state_col ;
+  }
+  
+  return(m_t_states);
+}'
+
+## Code 6 - time_in_states:----
+### Returns the matrix passed to the function
+code6 <- 
+  'arma::mat time_in_state6( arma::mat m_t_states,
+                        const arma::colvec& v_S_t,
+                        const std::vector<int>& v_tracked_states) {
+  // m_t_states: matrix storing times spent in each health state.
+  // v_S_t: vector of health states occupied by individuals at cycle t.
+  // v_tracked_states: vector of health states in which to track time.
+
+  // Track time if in tracked states:
+  for(int s : v_tracked_states) {
+    // Rescale states numerical identifier (s) to C++ index (i):
+    int i = s - 1 ;
+    
+    // Create a logical vector where state matches s:
+    arma::uvec other_states = arma::find(v_S_t != s) ;
+
+    // Copy column data to a temporary vector:
+    arma::vec state_col = m_t_states.col(i) ;
+    
+    // Increment the time for all individuals in the column.
+    state_col += 1 ;
+    
+    // Ensure other_states has valid indices within the range of tmp_col
+    if (!other_states.empty()) {
+      // Reset time in other states to 0 using .elem():
+      state_col.elem(other_states).fill(0) ;
+    }
+    
+    // Record time back to states time matrix:
+    m_t_states.col(i) = state_col ;
+  }
+  
+  return(m_t_states);
+}'
 
 # Compile C++ code:----
 cpp_functions_defs <- list(
-  code1, code2, code3, code4
+  code1, code2, code3, code4, code5, code6
 )
 
 for (code in cpp_functions_defs) {
@@ -230,42 +303,42 @@ v_M_1 <- sample(
   replace = TRUE, 
   size = n.i
 )
-v.M_1 <- v.n[v_M_1]
-time_in_states <- cbind(v_M_1, 0, 0, 0)
-time_in_states2 <- cbind(
-  0, ifelse(
-    v_M_1 == 2, sample(
-      x = 1:50, 
-      prob = rep(1/50, 50), 
-      replace = TRUE, 
-      size = n.i
-  ), 0), 0, 0)
-m_t_states = matrix(
+m_t_states <- matrix(
   data = 0,
   nrow = n.i,
   ncol = n.s
 )
-m_t_states2 = matrix(
-  data = 0,
-  nrow = n.i,
-  ncol = n.s
-)
-m_t_states3 = matrix(
-  data = 0,
-  nrow = n.i,
-  ncol = n.s
-)
-m_t_states4 = matrix(
-  data = 0,
-  nrow = n.i,
-  ncol = n.s
-)
-time_in_state(
+m_t_states2 <- matrix(
+    data = 0,
+    nrow = n.i,
+    ncol = n.s
+  )
+m_t_states3 <- matrix(
+    data = 0,
+    nrow = n.i,
+    ncol = n.s
+  )
+m_t_states4 <- matrix(
+    data = 0,
+    nrow = n.i,
+    ncol = n.s
+  )
+m_t_states5 <- matrix(
+    data = 0,
+    nrow = n.i,
+    ncol = n.s
+  )
+m_t_states6 <- matrix(
+    data = 0,
+    nrow = n.i,
+    ncol = n.s
+  )
+test1 <- time_in_state(
   m_t_states = m_t_states,
   v_S_t = v_M_1,
   v_tracked_states = c(2, 3)
 )
-time_in_state2(
+test2 <- time_in_state2(
   m_t_states = m_t_states2,
   v_S_t = v_M_1,
   v_tracked_states = c(2, 3)
@@ -280,6 +353,17 @@ time_in_state4(
   v_S_t = v_M_1,
   v_tracked_states = c(2, 3)
 )
+time_in_state5(
+  m_t_states = m_t_states5,
+  v_S_t = v_M_1,
+  v_tracked_states = c(2, 3)
+)
+test6 <- time_in_state6(
+  m_t_states = m_t_states6,
+  v_S_t = v_M_1,
+  v_tracked_states = c(2, 3)
+)
+
 # Compare functions:----
 results <- microbenchmark::microbenchmark(
   times = 1000,
@@ -300,6 +384,16 @@ results <- microbenchmark::microbenchmark(
   ),
   "time_in_state4" = time_in_state4( # fastest
     m_t_states = m_t_states4,
+    v_S_t = v_M_1,
+    v_tracked_states = c(2, 3)
+  ),
+  "time_in_state5" = time_in_state5(
+    m_t_states = m_t_states5,
+    v_S_t = v_M_1,
+    v_tracked_states = c(2, 3)
+  ),
+  "time_in_state6" = time_in_state6(
+    m_t_states = m_t_states6,
     v_S_t = v_M_1,
     v_tracked_states = c(2, 3)
   )
