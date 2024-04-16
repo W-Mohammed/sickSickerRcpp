@@ -20,11 +20,10 @@ std::vector<double> custom_Pow( const std::vector<double> base,
   return res;
 }
 
-// [[Rcpp::export]]
-arma::mat ProbsV_Cpp_old( arma::rowvec v_S_t,
-                          int& n_I,
-                          int& n_S,
-                          NumericVector& t_P ) {
+arma::mat ProbsV_Cpp( arma::rowvec v_S_t,
+                      int& n_I,
+                      int& n_S,
+                      NumericVector& t_P ) {
   // v_S_t: numeric vector containing the health states occupied by the individuals at cycle t
   // n_I: number of simulated individuals
   // n_S: number of health states
@@ -62,63 +61,10 @@ arma::mat ProbsV_Cpp_old( arma::rowvec v_S_t,
     return(m_P_t) ;
 }
 
-// [[Rcpp::export]]
-arma::mat ProbsV_Cpp( arma::rowvec& v_S_t,
-                      int& n_I,
-                      int& n_S,
-                      arma::mat& t_P ) {
-  // v_S_t: numeric vector containing the health states occupied by the individuals at cycle t
-  // n_I: number of simulated individuals
-  // n_S: number of health states
-  // t_P: transition probabilities matrix.
-  
-  // create a matrix for the state transition probabilities at time t (m_P_t):
-  // mat(n_rows, n_cols) initiated with zeros
-  arma::mat m_P_t(n_I, n_S) ;
-  
-  // create a cube/array for the probabilities of transitioning from current states:
-  // cube(n_rows, n_cols, n_slices) initiated with zeros
-  arma::cube c_P_t(n_I, n_S, n_S) ;
-  
-  // assign probabilities from t_P to the slices
-  for(arma::uword i = 0; i < c_P_t.n_slices; i++) {
-    
-    // Get the transition probabilities from health state i as a row vector:
-    // Replicate t_P.row(i) n_I times vertically, and 1 time horizontally:
-    c_P_t.slice(i) = arma::repmat(t_P.row(i), n_I, 1) ;
-  }
-  
-  // Add probabilities to m_P_t based on time t and state i or S as in v_S_t:
-  for(int i = 0; i < n_S; i++) {
-    // Identify individuals occupying state i at time t:
-    // Adjust states occupancy to allign with C++ indexing, which starts at 0:
-    arma::uvec v_O_t = arma::find(v_S_t == (i + 1)) ;
-    
-    // Grab transition probabilities from state i
-    // Assign probabilities for state i occupancy according to v_O_t:
-    m_P_t.rows(v_O_t) = c_P_t.slice(i).rows(v_O_t) ;
-  }
-  
-  // check if vector of probabilities sum to 1
-  // need to round up to the 1e-6, otherwise it breaks
-  // Rounding to the 6th decimal place
-  int n = 6 ;
-  arma::colvec sum_row = arma::round(arma::sum(m_P_t, 1) * std::pow(10, n)) / std::pow(10, n) ;
-  bool notSumToOne = arma::any(sum_row != 1.000000) ;
-  
-  if(notSumToOne) {
-    stop("Probabilities do not sum to 1!") ;
-  }
-  else {
-    return(m_P_t) ;
-  }
-}
-
-// [[Rcpp::export]]
-arma::mat SampleV_Cpp_old( arma::mat m_P_t,
-                           int& n_I,
-                           int& n_S,
-                           int m = 1) {
+arma::mat SampleV_Cpp( arma::mat m_P_t,
+                       int& n_I,
+                       int& n_S,
+                       int m = 1) {
   // m_P_t: numeric matrix containing the transition probabilities for individuals at cycle t
   // n_I: number of simulated individuals.
   // n_S: number of health states.
@@ -157,94 +103,11 @@ arma::mat SampleV_Cpp_old( arma::mat m_P_t,
   return(m_M_t) ;
 }
 
-// [[Rcpp::export]]
-arma::mat SampleV_Cpp( arma::mat& m_P_t,
-                       int& n_I,
-                       int& n_S,
-                       int m = 1) {
-  // m_P_t: numeric matrix containing the transition probabilities for individuals at cycle t
-  // n_I: number of simulated individuals.
-  // n_S: number of health states.
-  // m: number of health states to sample.
-  
-  // create m_CumProb_t matrix with row-wise cumlative transition probabilities:
-  arma::mat m_CumProb_t = arma::cumsum(m_P_t, 1) ;
-  
-  // create a matrix for sampled health states (m_M_t):
-  arma::mat m_M_t(n_I, m, arma::fill::ones) ;
-  
-  // recheck the probabilities:
-  // need to round up to the 1e-6, otherwise it breaks
-  // Rounding to the 6th decimal place
-  int n = 6 ;
-  arma::colvec v_CumProb_t = arma::round(m_CumProb_t.col(m_CumProb_t.n_cols - 1) * 
-    std::pow(10, n)) / std::pow(10, n) ;
-  bool notSumToOne = arma::any(v_CumProb_t != 1.000000) ;
-  
-  if(notSumToOne) {
-    stop("error in multinom: probabilities do not sum to 1") ;
-  }
-  
-  // Initialise a matrix to save values sampled from the U~(0, 1)  
-  arma::mat m_U(n_I, n_S, fill::ones) ;
-  for(int i = 0; i < m; i++) {
-    // in each row, sample one random value for n_I individuals and repeat that value n_S times
-    m_U = arma::repmat( arma::randu<colvec>(n_I), 1, n_S ) ;
-    
-    // identify the first individual-specific health-state with a cumulative probability higher than the their corresponding sampled value
-    // using a logical (true/false or 1/0), matrix get the value to be added to 1 (the starting health-state)
-    // one plus the sum of each row of the logical matrix gives the health-state for the corresponding individuals at time t + 1
-    m_M_t.col(i) = m_M_t.col(i) + arma::sum( (m_U > m_CumProb_t), 1 ) ;
-  }
-  
-  return(m_M_t) ;
-}
-
-// [[Rcpp::export]]
-arma::colvec SampleV_Cpp( arma::mat& m_P_t,
-                          int& n_I,
-                          int& n_S) {
-  // m_P_t: numeric matrix containing the transition probabilities for individuals at cycle t
-  // n_I: number of simulated individuals.
-  // n_S: number of health states.
-  
-  // create m_CumProb_t matrix with row-wise cumlative transition probabilities:
-  arma::mat m_CumProb_t = arma::cumsum(m_P_t, 1) ;
-  
-  // create a column vector for sampled health states (v_s_t):
-  arma::colvec v_s_t = arma::ones<arma::colvec>(n_I) ;
-  
-  // recheck the probabilities:
-  // need to round up to the 1e-6, otherwise it breaks
-  // Rounding to the 6th decimal place
-  int n = 6 ;
-  arma::colvec v_CumProb_t = arma::round(m_CumProb_t.col(m_CumProb_t.n_cols - 1) * 
-    std::pow(10, n)) / std::pow(10, n) ;
-  bool notSumToOne = arma::any(v_CumProb_t != 1.000000) ;
-  
-  if(notSumToOne) {
-    stop("error in multinom: probabilities do not sum to 1") ;
-  }
-  
-  // Initialise a matrix to save values sampled from the U~(0, 1)  
-  arma::mat m_U(n_I, n_S, fill::ones) ;
-  // in each row, sample one random value for n_I individuals and repeat that value n_S times
-  m_U = arma::repmat( arma::randu<colvec>(n_I), 1, n_S ) ;
-  
-  // identify the first individual-specific health-state with a cumulative probability higher than the their corresponding sampled value
-  // using a logical (true/false or 1/0), matrix get the value to be added to 1 (the starting health-state)
-  // one plus the sum of each row of the logical matrix gives the health-state for the corresponding individuals at time t + 1
-  v_s_t = v_s_t + arma::sum( (m_U > m_CumProb_t), 1 ) ;
-  
-  return(v_s_t) ;
-}
-
-// [[Rcpp::export]]
-arma::colvec CostsV_Cpp_old( arma::colvec v_S_t,
-                             int& n_I,
-                             int& n_S,
-                             NumericVector& v_Costs,
-                             bool b_Trt = false ) {
+arma::colvec CostsV_Cpp( arma::colvec v_S_t,
+                         int& n_I,
+                         int& n_S,
+                         NumericVector& v_Costs,
+                         bool b_Trt = false ) {
   // v_S_t: vector of health states occupied by individuals at cycle t
   // n_I: number of simulated individuals.
   // n_S: number of health states.
@@ -267,28 +130,12 @@ arma::colvec CostsV_Cpp_old( arma::colvec v_S_t,
   return(m_C_t.col(0)) ;
 }
 
-// [[Rcpp::export]]
-arma::colvec CostsV_Cpp( arma::colvec& v_S_t,
-                         arma::vec& v_Costs) {
-  // v_S_t: vector of health states occupied by individuals at cycle t.
-  // v_Costs: a vector containing cost parameters.
-  
-  // Transforming state occupancy to allign with C++ indexing:
-  arma::uvec uv_indices = arma::conv_to<arma::uvec>::from(v_S_t - 1) ;
-  
-  // Use states indecies to assign costs correctly:
-  arma::colvec v_col_costs = v_Costs.elem(uv_indices) ;
-  
-  return(v_col_costs) ;
-}
-
-// [[Rcpp::export]]
-arma::colvec EffsV_Cpp_old( arma::colvec v_S_t,
-                            int& n_I,
-                            int& n_S,
-                            NumericVector& v_Utilities,
-                            bool b_Trt = false,
-                            int cl = 1 ) {
+arma::colvec EffsV_Cpp( arma::colvec v_S_t,
+                        int& n_I,
+                        int& n_S,
+                        NumericVector& v_Utilities,
+                        bool b_Trt = false,
+                        int cl = 1 ) {
   // v_S_t: vector of health states occupied by individuals at cycle t
   // n_I: number of simulated individuals.
   // n_S: number of health states.
@@ -312,41 +159,21 @@ arma::colvec EffsV_Cpp_old( arma::colvec v_S_t,
   return(m_E_t.col(0)) ;
 }
 
-// [[Rcpp::export]]
-arma::colvec EffsV_Cpp( arma::colvec& v_S_t,
-                        arma::vec& v_Utilities,
-                        int cycle = 1 ) {
-  // v_S_t: vector of health states occupied by individuals at cycle t.
-  // v_Utilities: a vector containing utilities values for each health state.
-  // cycle: integer variable indicating cycle length in years - default is 1.
-  
-  // Transforming state occupancy to allign with C++ indexing:
-  arma::uvec uv_indices = arma::conv_to<arma::uvec>::from(v_S_t - 1) ;
-  
-  // Calculating QALYs, multiplying utilities by the length of the cycle length:
-  arma::vec v_QALYs = v_Utilities * cycle ;
-  
-  // Use states indecies to assign utilities correctly:
-  arma::colvec v_col_QALYs = v_QALYs.elem(uv_indices) ;
-  
-  return(v_col_QALYs) ;
-}
-
 /************* Micro-simulation ***************/
 
 // [[Rcpp::export]]
-List MicroSimV_Cpp( arma::colvec& v_S_t,
-                    NumericVector t_P,
-                    NumericVector v_C,
-                    NumericVector v_U,
-                    int n_I,
-                    int n_S = 4,
-                    int n_T = 30,
-                    int n_Cl = 1,
-                    double d_dC = 0.03,
-                    double d_dE = 0.03,
-                    bool b_Trt = false,
-                    int n_Seed = 1 ) {
+List MicroSimV_Cpp_1( arma::colvec& v_S_t,
+                      NumericVector t_P,
+                      NumericVector v_C,
+                      NumericVector v_U,
+                      int n_I,
+                      int n_S = 4,
+                      int n_T = 30,
+                      int n_Cl = 1,
+                      double d_dC = 0.03,
+                      double d_dE = 0.03,
+                      bool b_Trt = false,
+                      int n_Seed = 1 ) {
   // Arguments:
   // v_S_t:  numeric vector containing the health states occupied by the individuals at cycle t
   // t_P:    vector containing transition probabilities

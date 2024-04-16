@@ -178,13 +178,101 @@ code4 <-
   arma::vec v_col_Utilities = v_Utilities.elem(uv_indices) - v_d_Utilities ;
   
   // Calculating QALYs, multiplying utilities by the length of the cycle length:
-  arma::colvec v_col_QALYs = v_col_Utilities  * cycle;
+  arma::colvec v_col_QALYs = v_col_Utilities  * cycle ;
   
   return(v_col_QALYs) ;
 }'
+## Code 5 - EffsV:----
+code5 <- 
+  'arma::colvec EffsV_Cpp5(arma::colvec& v_S_t,
+                        arma::vec& v_Utilities,
+                        arma::vec* v_d_Utilities, // Use a pointer instead of a reference
+                        arma::mat& m_t_states,
+                        int cycle = 1) {
+                        
+  // Transforming state occupancy to align with C++ indexing:
+  arma::uvec uv_indices = arma::conv_to<arma::uvec>::from(v_S_t - 1) ;
+  
+  arma::vec v_col_Utilities = v_Utilities.elem(uv_indices) ;
+
+  // Check if v_d_Utilities is not NULL
+  if (v_d_Utilities != nullptr) {
+  
+    // Estimating disutilities based on the time spent in each state if v_d_Utilities is provided:
+    arma::vec v_col_d_Utilities = m_t_states * (*v_d_Utilities) ; // Dereference the pointer to use its value
+    v_col_Utilities -= v_col_d_Utilities;
+  }
+  
+  // Calculating effects, multiplying utilities by the length of the cycle:
+  arma::colvec v_col_effs = v_col_Utilities * cycle ;
+  
+  return(v_col_effs) ;
+}'
+# EffsV_Cpp5(v_S_t, v_Utilities, nullptr, m_t_states, cycle);
+# EffsV_Cpp5(v_S_t, v_Utilities, &v_d_Utilities, m_t_states, cycle);
+## Code 6 - EffsV:----
+code6 <- 
+  'arma::colvec EffsV_Cpp6(arma::colvec& v_S_t,
+                        arma::vec& v_Utilities,
+                        Rcpp::Nullable<Rcpp::NumericVector> v_d_Utilities, // Changed to Nullable
+                        arma::mat& m_t_states,
+                        int cycle = 1) {
+  // Transforming state occupancy to align with C++ indexing:
+  arma::uvec uv_indices = arma::conv_to<arma::uvec>::from(v_S_t - 1) ;
+  
+  arma::vec v_col_Utilities = v_Utilities.elem(uv_indices) ;
+
+  // Check if v_d_Utilities is not NULL
+  if (v_d_Utilities.isNotNull()) {
+  
+    // Convert Rcpp::NumericVector to arma::vec
+    arma::vec v_col_d_Utilities = arma::vec(Rcpp::as<arma::vec>(v_d_Utilities)) ;
+    
+    // Estimating disutilities based on the time spent in each state if v_d_Utilities is provided:
+    v_col_d_Utilities = m_t_states * v_col_d_Utilities; // No need to dereference
+    v_col_Utilities -= v_col_d_Utilities;
+  }
+  
+  // Calculating effects, multiplying utilities by the length of the cycle:
+  arma::colvec v_col_effs = v_col_Utilities * cycle;
+  
+  return v_col_effs;
+}'
+## code 7 - EffsV:----
+code7 <- 
+  'arma::colvec EffsV_Cpp7(arma::colvec& v_S_t,
+                        arma::vec& v_Utilities,
+                        Rcpp::Nullable<Rcpp::NumericVector> v_d_Utilities, // Remains Nullable
+                        Rcpp::Nullable<Rcpp::NumericMatrix> m_t_states, // Now Nullable
+                        int cycle = 1) {
+  
+  // Transforming state occupancy to align with C++ indexing:
+  arma::uvec uv_indices = arma::conv_to<arma::uvec>::from(v_S_t - 1);
+  
+  arma::vec v_col_Utilities = v_Utilities.elem(uv_indices);
+
+  // Check if both v_d_Utilities and m_t_states are not NULL in the same IF statement
+  if (v_d_Utilities.isNotNull() && m_t_states.isNotNull()) {
+  
+    // Convert Rcpp::NumericVector to arma::vec for disutilities
+    arma::vec v_col_d_Utilities = Rcpp::as<arma::vec>(v_d_Utilities);
+    
+    // Convert Rcpp::NumericMatrix to arma::mat for m_t_states
+    arma::mat m_t_states = Rcpp::as<arma::mat>(m_t_states);
+    
+    // Estimating disutilities based on the time spent in each state:
+    v_col_d_Utilities = m_t_states * v_col_d_Utilities;
+    v_col_Utilities -= v_col_d_Utilities;
+  }
+  
+  // Calculating effects, multiplying utilities by the length of the cycle:
+  arma::colvec v_col_effs = v_col_Utilities * cycle;
+  
+  return v_col_effs;
+}'
 # Compile C++ code:----
 cpp_functions_defs <- list(
-  code1, code2, code3, code4, code5
+  code1, code2, code3, code4, code6, code7#, code5
 )
 
 for (code in cpp_functions_defs) {
@@ -251,6 +339,34 @@ test5 <- EffsV_Cpp4(
   m_t_states = time_in_states2,
   cycle = 1
 )
+test6_1 <- EffsV_Cpp6(
+  v_S_t = v_M_1,
+  v_Utilities = u_vec,
+  v_d_Utilities = ru_vec,
+  m_t_states = time_in_states2,
+  cycle = 1
+)
+test6_2 <- EffsV_Cpp6(
+  v_S_t = v_M_1,
+  v_Utilities = u_vec,
+  v_d_Utilities = NULL,
+  m_t_states = time_in_states2,
+  cycle = 1
+)
+test7_1 <- EffsV_Cpp7(
+  v_S_t = v_M_1,
+  v_Utilities = u_vec,
+  v_d_Utilities = ru_vec,
+  m_t_states = time_in_states2,
+  cycle = 1
+)
+test7_2 <- EffsV_Cpp7(
+  v_S_t = v_M_1,
+  v_Utilities = u_vec,
+  v_d_Utilities = NULL,
+  m_t_states = NULL,
+  cycle = 1
+)
 # Compare functions:----
 results <- microbenchmark::microbenchmark(
   times = 1000,
@@ -283,6 +399,34 @@ results <- microbenchmark::microbenchmark(
     v_Utilities = u_vec,
     v_d_Utilities = ru_vec,
     m_t_states = time_in_states2,
+    cycle = 1
+  ),
+  "EffsV_Cpp6_1" = EffsV_Cpp6(
+    v_S_t = v_M_1,
+    v_Utilities = u_vec,
+    v_d_Utilities = ru_vec,
+    m_t_states = time_in_states2,
+    cycle = 1
+  ),
+  "EffsV_Cpp6_2" = EffsV_Cpp6(
+    v_S_t = v_M_1,
+    v_Utilities = u_vec,
+    v_d_Utilities = NULL,
+    m_t_states = time_in_states2,
+    cycle = 1
+  ),
+  "EffsV_Cpp7_1" = EffsV_Cpp7(
+    v_S_t = v_M_1,
+    v_Utilities = u_vec,
+    v_d_Utilities = ru_vec,
+    m_t_states = time_in_states2,
+    cycle = 1
+  ),
+  "EffsV_Cpp7_2" = EffsV_Cpp7(
+    v_S_t = v_M_1,
+    v_Utilities = u_vec,
+    v_d_Utilities = NULL,
+    m_t_states = NULL,
     cycle = 1
   )
 )

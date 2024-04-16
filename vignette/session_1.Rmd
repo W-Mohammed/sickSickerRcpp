@@ -1,0 +1,58 @@
+---
+title: "Introduction to microsimulation in R"
+author: "Wael Mohammed"
+date: "2024-04-08"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+State-transition cohort models are among the most frequently utilized decision-making models. These models examine a uniform group of individuals as they move through various health states. In deterministic cohort models, outcomes are specifically defined by initial conditions and parameters. However, as decision-making becomes more complex, these models often fall short, necessitating more sophisticated approaches. A typical presumption in cohort models is that the probabilities of transitioning from one state to another are solely based on the current health state within any given cycle, without consideration for past states. This principle, known as the "*Markov*" assumption, presents a fundamental constraint of cohort models. Although it's possible to modify these models to account for historical transitions by introducing additional states, this often leads to complex, unwieldy models due to an excessive expansion of states.
+
+*Microsimulation* models or *individual-based state-transition* models offer a solution to the limitations of deterministic state-transition cohort models, as they provide a more accurate representation of individual clinical pathways and can incorporate the impact of history on future events. Additionally, they can capture the variation in patient characteristics at baseline more easily. Microsimulation models simulate the impact of interventions or policies on individual trajectories, unlike cohort-based models that determine the deterministic mean response of homogeneous cohorts. By generating outcomes for each individual, microsimulation models estimate the distribution of an outcome for a sample of potentially heterogeneous individuals, introducing stochastic variation in disease progression as well as variation due to individual characteristics. The individual-level simulation enables the inclusion of "memory" in the model's structure, unlike cohort-based models that require the Markov assumption. Microsimulation models are popular in diseases where the severity of the disease or the cost and health outcomes vary with the duration spent in a diseased state, thanks to their "memory" characteristic.
+
+Microsimulation models describe key biological processes or clinical pathways. These processes or pathways can be conceptualised in terms of a series of distinct health states (events) that are mutually exclusive and collectively exhaustive. Each simulated individual can only be in one health state at any given time. Using individual-specific transition probabilities, people are simulated through the model one at a time, while keeping track of their individual trajectories. In health economics, every health state, and potentially every transition between health states, is associated with a specific set of values (sometimes called "payoffs" or "rewards"). For instance, in a cost-utility analysis, the cost and the quality-adjusted life years (QALYs) would represent the rewards associated with remaining in each health state for one cycle. State and transition outcome values can be influenced by a person's characteristics as well as their past transitions and events.
+
+```{r algorithm, echo=TRUE, eval=FALSE}
+# create matrices to capture the simulation of 1,000 individuals over 30 cycles
+m_States <- matrix(nrow = 1000, ncol = 30 + 1) # to store state name
+m_Costs  <- matrix(nrow = 1000, ncol = 30 + 1) # to store state-related calc_costs
+m_Effs   <- matrix(nrow = 1000, ncol = 30 + 1) # to store state-related health outcomes (QALYs) 
+
+for (i in 1:1000) {                            # for each 'i' of the 1,000 simulated individual:
+  
+  # Step 1:
+  m_States[i, 1] <- v_starting_states[i]       # indicate the initial health state
+  m_Costs[i, 1]  <- calc_costs(m_States[i, 1]) # calculate the costs incurred in their starting health state
+  m_Effs[i, 1]   <- calc_effs(m_States[i, 1])  # calculate the QALYs accrued in their starting health state
+  
+  for (t in 1:30) {                               # for each 't' of the 30 cycles:
+    # Step 2:
+    v_trans_probs <- update_porbs(m_States[i, t]) # update the transition probabilities at cycle 't'
+    
+    # Step 3:
+    m_States[i, t + 1] <- sample(state_names, prob = v_trans_probs, size = 1)  # sample the health state at 't + 1' 
+    
+    # Step 4:
+    m_Costs[i, t + 1]  <- calc_costs(m_States[i, t + 1]) # calculate the costs incurred in their 't + 1' health state
+    m_Effs[i, t + 1]   <- calc_effs( m_States[i, t + 1]) # calculate the QALYs accrued in their 't + 1' health state
+  } # close the loop for the cycles 't' 
+  
+} # close the loop for the individuals 'i'
+
+# Step 5:
+v_total_costs <- rowSums(m_Costs)           # calculate total cost per individual
+v_total_qalys <- rowSums(m_Effs)            # calculate total QALYs per individual
+total_costs   <- mean(v_total_costs)        # calculate average discounted cost 
+total_qalys   <- mean(v_total_qalys)        # calculate average discounted QALYs
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:

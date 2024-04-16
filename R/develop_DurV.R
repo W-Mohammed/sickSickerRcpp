@@ -281,7 +281,6 @@ code6 <-
   
   return(m_t_states);
 }'
-
 # Compile C++ code:----
 cpp_functions_defs <- list(
   code1, code2, code3, code4, code5, code6

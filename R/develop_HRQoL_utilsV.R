@@ -5,7 +5,7 @@ Utilities_coefficients <- c(0.8502, -0.0080, -0.0007, 0.0206)
 # Individuals Characteristics:
 age_mean <- 50
 set.seed(1234)
-individuals_ages <- rnorm(n.i, mean = age_mean, sd = age_mean / 10)
+individuals_ages <- rnorm(n.i, mean = age_mean, sd = age_mean)
 female_proportion <- 0.4
 set.seed(1234)
 individuals_female <- sample(
