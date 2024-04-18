@@ -155,7 +155,7 @@ calc_effs <- function (
   
   # estimate utilities based on occupied state
   state_utility <- 0                                                            # by default the utility for everyone is zero
-  state_utility[occupied_state == "H"]  <- v_states_utilities["H"]              # update the utility if healthy
+  state_utility[occupied_state == "H"]  <- v_states_utilities["H"]  + decrement # update the utility if healthy
   state_utility[occupied_state == "S1"] <- v_states_utilities["S1"] + decrement # update the utility if sick
 
   # calculate Quality Adjusted Life Years (QALYs)

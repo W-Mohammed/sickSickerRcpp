@@ -207,7 +207,7 @@ calc_effs <- function (
   
   # estimate utilities based on occupied state
   state_utility <- 0                                                            # by default the utility for everyone is zero
-  state_utility[occupied_state == "H"]  <- v_states_utilities["H"]              # update the utility if healthy
+  state_utility[occupied_state == "H"]  <- v_states_utilities["H"]  + decrement # update the utility if healthy
   state_utility[occupied_state == "S1"] <- v_states_utilities["S1"] + decrement # update the utility if sick
   state_utility[occupied_state == "S2"] <- v_states_utilities["S2"] + decrement # update the utility if sicker
   state_utility[occupied_state == "D"]  <- v_states_utilities["D"]              # update the utility if dead
@@ -254,7 +254,7 @@ calc_effs <- function (
   
   # estimate utilities based on occupied state
   state_utility <- 0                                                            # by default the utility for everyone is zero
-  state_utility[occupied_state == "H"]  <- v_states_utilities["H"]              # update the utility if healthy
+  state_utility[occupied_state == "H"]  <- v_states_utilities["H"]  + decrement # update the utility if healthy
   state_utility[occupied_state == "S1"] <- v_states_utilities["S1"] + decrement # update the utility if sick
   state_utility[occupied_state == "S2"] <- v_states_utilities["S2"] + decrement # update the utility if sicker
   state_utility[occupied_state == "D"]  <- v_states_utilities["D"]              # update the utility if dead
