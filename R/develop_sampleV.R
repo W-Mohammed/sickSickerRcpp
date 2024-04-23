@@ -1,5 +1,5 @@
 # Parameters:----
-n.i   <- 100000                # number of simulated individuals
+n.i   <- 1e6                   # number of simulated individuals
 n.t   <- 30                    # time horizon, 30 cycles
 v.n   <- c("H","S1","S2","D")  # the model states: Healthy (H), Sick (S1), Sicker (S2), Dead (D)
 n.s   <- length(v.n)           # the number of health states
@@ -346,6 +346,13 @@ results <- microbenchmark::microbenchmark(
 
 # Print the results
 print(results)
+
+# Unit: milliseconds
+#         expr      min        lq      mean    median        uq      max neval
+#    SampleV_R 135.3824 152.93265 161.83898 158.11995 165.97400 240.1300   100
+#  SampleV_Cpp  94.6879  98.69145 105.03883 100.61445 106.54750 162.2282   100
+# SampleV_Cpp2  53.0879  55.41015  58.92750  56.98580  58.93545 113.3415   100
+# SampleV_Cpp3  51.4090  53.49470  56.64896  54.29895  56.71630 110.1587   100
 
 # For a visual comparison
 boxplot(results)

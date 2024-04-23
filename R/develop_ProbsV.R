@@ -1,5 +1,5 @@
 # Parameters:----
-n.i   <- 1e5                # number of simulated individuals
+n.i   <- 1e6                # number of simulated individuals
 n.t   <- 30                    # time horizon, 30 cycles
 v.n   <- c("H","S1","S2","D")  # the model states: Healthy (H), Sick (S1), Sicker (S2), Dead (D)
 n.s   <- length(v.n)           # the number of health states

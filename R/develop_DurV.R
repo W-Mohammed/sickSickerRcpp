@@ -1,5 +1,5 @@
 # Parameters:----
-n.i   <- 1e5                    # number of simulated individuals
+n.i   <- 1e6                    # number of simulated individuals
 n.t   <- 30                    # time horizon, 30 cycles
 v.n   <- c("H","S1","S2","D")  # the model states: Healthy (H), Sick (S1), Sicker (S2), Dead (D)
 n.s   <- length(v.n)           # the number of health states
@@ -281,9 +281,135 @@ code6 <-
   
   return(m_t_states);
 }'
+## Code 6.1 - time_in_states:----
+### Returns the matrix passed to the function
+code6.1 <- 
+  'arma::mat time_in_state6_1( arma::mat m_t_states,
+                        const arma::colvec& v_S_t,
+                        const std::vector<int>& v_tracked_states) {
+  // m_t_states: matrix storing times spent in each health state.
+  // v_S_t: vector of health states occupied by individuals at cycle t.
+  // v_tracked_states: vector of health states in which to track time.
+
+  // Track time if in tracked states:
+  for(int s : v_tracked_states) {
+    // Rescale states numerical identifier (s) to C++ index (i):
+    int i = s - 1 ;
+    
+    // Create a logical vector where state matches s:
+    arma::uvec other_states = arma::find(v_S_t != s) ;
+
+    // Copy column data to a temporary vector:
+    arma::vec state_col = m_t_states.col(i) ;
+    
+    // Increment the time for all individuals in the column.
+    state_col += 1 ;
+    
+    // Ensure other_states has valid indices within the range of tmp_col
+    if (!other_states.empty()) {
+      // Reset time in other states to 0 using .elem():
+      state_col.elem(other_states).zeros() ;
+    }
+    
+    // Record time back to states time matrix:
+    m_t_states.col(i) = state_col ;
+  }
+  
+  return(m_t_states);
+}'
+## Code 7 - time_in_states:----
+### Take two vectors and return another
+code7 <- 
+  'arma::colvec time_in_state7(const arma::colvec& v_curr_occupied,
+                            const arma::colvec& v_next_occupied,
+                            arma::colvec v_time_in_state) {
+  // v_curr_occupied: vector of currently occupied states
+  // v_next_occupied: vector of occupied states in the next cycle
+  // v_time_in_state: vector of time spen in current state
+  
+  // compute the indices where the state remained the same
+  arma::uvec remained_indices = arma::find(v_curr_occupied == v_next_occupied) ;
+
+  // compute the indices where the state has changed
+  arma::uvec changed_indices = arma::find(v_curr_occupied != v_next_occupied) ;  
+  
+  // increment time for unchanged states
+  v_time_in_state.elem(remained_indices) += 1 ;
+  
+  // reset changed states
+  v_time_in_state.elem(changed_indices).zeros() ;
+  
+  return(v_time_in_state) ;
+}'
+
+## Code 8 - time_in_states:----
+### Take two vectors and return another
+code8 <- 
+  'arma::colvec time_in_state8(const arma::colvec& v_curr_occupied,
+                            const arma::colvec& v_next_occupied,
+                            arma::colvec v_time_in_state) {
+  // v_curr_occupied: vector of currently occupied states
+  // v_next_occupied: vector of occupied states in the next cycle
+  // v_time_in_state: vector of time spen in current state
+  
+  // compute the indices where the state has changed
+  arma::uvec changed_indices = arma::find(v_curr_occupied != v_next_occupied) ;  
+  
+  // increment time for all states
+  v_time_in_state += 1 ;
+  
+  // reset changed states
+  v_time_in_state.elem(changed_indices).zeros() ;
+  
+  return(v_time_in_state) ;
+}'
+
+## Code 9 - time_in_states:----
+### Take two vectors and return another
+code9 <- 
+  'arma::colvec time_in_state9(const arma::colvec& v_curr_occupied,
+                            const arma::colvec& v_next_occupied,
+                            arma::colvec v_time_in_state) {
+  // v_curr_occupied: vector of currently occupied states
+  // v_next_occupied: vector of occupied states in the next cycle
+  // v_time_in_state: vector of time spen in current state
+  
+  // compute the indices where the state has changed
+  arma::uvec changed_indices = arma::find(v_curr_occupied != v_next_occupied) ;  
+  
+  // increment time for unchanged states
+  v_time_in_state += 1 ;
+  
+  // reset changed states
+  v_time_in_state.elem(changed_indices) *= 0 ;
+  
+  return(v_time_in_state) ;
+}'
+## Code 10 - time_in_states:----
+### Take two vectors and return another
+code10 <- 
+  'void time_in_state10(const arma::colvec& v_curr_occupied,
+                            const arma::colvec& v_next_occupied,
+                            arma::colvec& v_time_in_state) {
+  // v_curr_occupied: vector of currently occupied states
+  // v_next_occupied: vector of occupied states in the next cycle
+  // v_time_in_state: vector of time spen in current state
+  
+  // compute the indices where the state has changed
+  arma::uvec changed_indices = arma::find(v_curr_occupied != v_next_occupied) ;  
+  
+  // increment time for all states
+  v_time_in_state += 1 ;
+  
+  // reset changed states
+  v_time_in_state.elem(changed_indices).zeros() ;
+  
+  // no need to return anything
+}'
+
 # Compile C++ code:----
 cpp_functions_defs <- list(
-  code1, code2, code3, code4, code5, code6
+  code1, code2, code3, code4, code5, code6, code6.1, code7, code8, code9, code10
 )
 
 for (code in cpp_functions_defs) {
@@ -297,6 +423,12 @@ for (code in cpp_functions_defs) {
 
 # Test Rcpp functions:----
 v_M_1 <- sample(
+  x = 1:n.s, 
+  prob = rep(0.25, 4), 
+  replace = TRUE, 
+  size = n.i
+)
+v_M_2 <- sample(
   x = 1:n.s, 
   prob = rep(0.25, 4), 
   replace = TRUE, 
@@ -332,6 +464,8 @@ m_t_states6 <- matrix(
     nrow = n.i,
     ncol = n.s
   )
+v_t_states7 <- rep(0, n.i)
+v_t_states10 <- rep(0, n.i)
 test1 <- time_in_state(
   m_t_states = m_t_states,
   v_S_t = v_M_1,
@@ -362,7 +496,41 @@ test6 <- time_in_state6(
   v_S_t = v_M_1,
   v_tracked_states = c(2, 3)
 )
-
+test7 <- time_in_state7(
+  v_curr_occupied = v_M_1, 
+  v_next_occupied = v_M_2, 
+  v_time_in_state = v_t_states7
+)
+test7_2 <- time_in_state7(
+  v_curr_occupied = v_M_1, 
+  v_next_occupied = v_M_2, 
+  v_time_in_state = test7
+)
+test8 <- time_in_state8(
+  v_curr_occupied = v_M_1, 
+  v_next_occupied = v_M_2, 
+  v_time_in_state = v_t_states7
+)
+test8_2 <- time_in_state8(
+  v_curr_occupied = v_M_1, 
+  v_next_occupied = v_M_2, 
+  v_time_in_state = test8
+)
+test9 <- time_in_state9(
+  v_curr_occupied = v_M_1, 
+  v_next_occupied = v_M_2, 
+  v_time_in_state = v_t_states7
+)
+test9_2 = time_in_state9(
+  v_curr_occupied = v_M_1, 
+  v_next_occupied = v_M_2, 
+  v_time_in_state = test9
+)
+time_in_state10(
+  v_curr_occupied = v_M_1, 
+  v_next_occupied = v_M_2, 
+  v_time_in_state = v_t_states10
+)
 # Compare functions:----
 results <- microbenchmark::microbenchmark(
   times = 1000,
@@ -395,11 +563,50 @@ results <- microbenchmark::microbenchmark(
     m_t_states = m_t_states6,
     v_S_t = v_M_1,
     v_tracked_states = c(2, 3)
-  )
+  ),
+  "time_in_state6_1" = time_in_state6_1(
+    m_t_states = m_t_states6,
+    v_S_t = v_M_1,
+    v_tracked_states = c(2, 3)
+  ),
+  "time_in_state7" = time_in_state7(
+    v_curr_occupied = v_M_1, 
+    v_next_occupied = v_M_2, 
+    v_time_in_state = v_t_states7
+  ),
+  "time_in_state8" = time_in_state8(
+    v_curr_occupied = v_M_1, 
+    v_next_occupied = v_M_2, 
+    v_time_in_state = v_t_states7
+  ),
+  "time_in_state9" = time_in_state9(
+    v_curr_occupied = v_M_1, 
+    v_next_occupied = v_M_2, 
+    v_time_in_state = v_t_states7
+  ),
+  "time_in_state10" = time_in_state10(
+     v_curr_occupied = v_M_1, 
+     v_next_occupied = v_M_2, 
+     v_time_in_state = v_t_states10
+   )
 )
 
 # Print the results
 print(results)
+
+# Unit: milliseconds
+#             expr     min       lq      mean   median       uq      max neval
+#    time_in_state 28.5093 30.04890 33.439549 30.48660 31.51945  97.4207  1000
+#   time_in_state2 29.8155 31.04230 34.483372 31.55510 32.71815  89.1951  1000
+#   time_in_state3 14.7269 15.83665 17.044498 16.14585 16.72585  71.1745  1000
+#   time_in_state4 14.8487 15.78020 16.982710 16.16155 16.78530  70.8015  1000
+#   time_in_state5 29.4880 31.05015 35.275619 31.52470 32.61345 153.7405  1000
+#   time_in_state6 32.8900 34.66000 38.662956 35.29420 36.53835  94.9042  1000
+# time_in_state6_1 32.8647 34.61080 38.873510 35.24605 36.82375 100.2221  1000
+#   time_in_state7 13.7764 14.94890 17.708492 15.30485 15.99750  99.8509  1000
+#   time_in_state8 10.7677 11.65760 13.654581 11.96515 12.51750 124.0265  1000
+#   time_in_state9 10.7830 11.87580 14.041277 12.18465 12.70960  70.8539  1000
+#  time_in_state10  7.4461  8.30150  9.491939  8.54525  8.88965  63.3393  1000
 
 # For a visual comparison
 boxplot(results)
