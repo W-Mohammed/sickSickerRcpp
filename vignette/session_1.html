@@ -407,28 +407,28 @@ represent the rewards associated with remaining in each health state for
 one cycle. State and transition outcome values can be influenced by a
 person’s characteristics as well as their past transitions and
 events.</p>
-<pre class="r"><code># create matrices to capture the simulation of 1,000 individuals over 30 cycles
-m_States &lt;- matrix(nrow = 1000, ncol = 30 + 1) # to store state name
-m_Costs  &lt;- matrix(nrow = 1000, ncol = 30 + 1) # to store state-related calc_costs
-m_Effs   &lt;- matrix(nrow = 1000, ncol = 30 + 1) # to store state-related health outcomes (QALYs) 
+<pre class="r"><code># create matrices to capture the simulation of num_i individuals over num_cycles cycles
+m_States &lt;- matrix(nrow = num_i, ncol = num_cycles + 1) # to store state name
+m_Costs  &lt;- matrix(nrow = num_i, ncol = num_cycles + 1) # to store state-related calc_costs
+m_Effs   &lt;- matrix(nrow = num_i, ncol = num_cycles + 1) # to store state-related health outcomes (QALYs) 
 
-for (i in 1:1000) {                            # for each &#39;i&#39; of the 1,000 simulated individual:
+for (i in 1:num_i) {                              # for each &#39;i&#39; of the num_i simulated individual:
   
   # Step 1:
-  m_States[i, 1] &lt;- v_starting_states[i]       # indicate the initial health state
-  m_Costs[i, 1]  &lt;- calc_costs(m_States[i, 1]) # calculate the costs incurred in their starting health state
-  m_Effs[i, 1]   &lt;- calc_effs(m_States[i, 1])  # calculate the QALYs accrued in their starting health state
+  m_States[i, 1] &lt;- v_starting_states[i]          # indicate the initial health state
+  m_Costs[i, 1]  &lt;- calc_costs(m_States[i, 1])    # calculate the costs incurred in the starting health state
+  m_Effs[i, 1]   &lt;- calc_effs(m_States[i, 1])     # calculate the QALYs accrued in the starting health state
   
-  for (t in 1:30) {                               # for each &#39;t&#39; of the 30 cycles:
+  for (t in 1:num_cycles) {                       # for each &#39;t&#39; of the num_cycles cycles:
     # Step 2:
-    v_trans_probs &lt;- update_porbs(m_States[i, t]) # update the transition probabilities at cycle &#39;t&#39;
+    v_trans_probs &lt;- update_porbs(m_States[i, t]) # update the transition probabilities at &#39;t&#39;
     
     # Step 3:
-    m_States[i, t + 1] &lt;- sample(state_names, prob = v_trans_probs, size = 1)  # sample the health state at &#39;t + 1&#39; 
+    m_States[i, t + 1] &lt;- sample(state_names, prob = v_trans_probs, size = 1)  # sample the state at &#39;t + 1&#39; 
     
     # Step 4:
-    m_Costs[i, t + 1]  &lt;- calc_costs(m_States[i, t + 1]) # calculate the costs incurred in their &#39;t + 1&#39; health state
-    m_Effs[i, t + 1]   &lt;- calc_effs( m_States[i, t + 1]) # calculate the QALYs accrued in their &#39;t + 1&#39; health state
+    m_Costs[i, t + 1]  &lt;- calc_costs(m_States[i, t + 1]) # calculate the costs incurred at &#39;t + 1&#39;
+    m_Effs[i, t + 1]   &lt;- calc_effs( m_States[i, t + 1]) # calculate the QALYs accrued at &#39;t + 1&#39;
   } # close the loop for the cycles &#39;t&#39; 
   
 } # close the loop for the individuals &#39;i&#39;
@@ -436,8 +436,8 @@ for (i in 1:1000) {                            # for each &#39;i&#39; of the 1,0
 # Step 5:
 v_total_costs &lt;- rowSums(m_Costs)           # calculate total cost per individual
 v_total_qalys &lt;- rowSums(m_Effs)            # calculate total QALYs per individual
-total_costs   &lt;- mean(v_total_costs)        # calculate average discounted cost 
-total_qalys   &lt;- mean(v_total_qalys)        # calculate average discounted QALYs</code></pre>
+mean_costs    &lt;- mean(v_total_costs)        # calculate average discounted cost 
+mean_qalys    &lt;- mean(v_total_qalys)        # calculate average discounted QALYs</code></pre>
 </div>
 <div id="r-markdown" class="section level2">
 <h2>R Markdown</h2>
