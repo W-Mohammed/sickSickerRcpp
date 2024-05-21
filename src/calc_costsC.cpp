@@ -40,6 +40,7 @@ Rcpp::NumericVector calc_costsC1(Rcpp::IntegerVector v_occupied_state,
 }
 
 // calc_costsC2
+// arma::ivec is an vector of type integer, it saves memory 
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]
 arma::vec calc_costsC2(arma::ivec& v_occupied_state,
