@@ -1,6 +1,7 @@
 #include <RcppArmadillo.h>
 
 // sampleC1
+//
 // [[Rcpp::export]]
 Rcpp::IntegerVector sampleC1(Rcpp::NumericMatrix m_trans_probs) {
   
@@ -77,7 +78,7 @@ Rcpp::IntegerVector sampleC1(Rcpp::NumericMatrix m_trans_probs) {
 // Enable C++11 via this plugin (Rcpp 0.10.3 or later)
 // [[Rcpp::plugins(cpp11)]]
 // [[Rcpp::depends(RcppArmadillo)]]
-
+//
 // [[Rcpp::export]]
 arma::uvec sampleC2(const arma::mat& m_trans_probs) {
   
@@ -118,7 +119,7 @@ arma::uvec sampleC2(const arma::mat& m_trans_probs) {
 // Enable C++11 via this plugin (Rcpp 0.10.3 or later)
 // [[Rcpp::plugins(cpp11)]]
 // [[Rcpp::depends(RcppArmadillo)]]
-
+//
 // [[Rcpp::export]]
 arma::colvec sampleC3(const arma::mat& m_trans_probs) {
   
@@ -160,7 +161,7 @@ arma::colvec sampleC3(const arma::mat& m_trans_probs) {
 // Enable C++11 via this plugin (Rcpp 0.10.3 or later)
 // [[Rcpp::plugins(cpp11)]]
 // [[Rcpp::depends(RcppArmadillo)]]
-
+//
 // [[Rcpp::export]]
 arma::colvec sampleC4(const arma::mat& m_trans_probs) {
   

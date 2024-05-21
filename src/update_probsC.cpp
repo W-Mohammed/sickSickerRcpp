@@ -116,7 +116,6 @@ NumericMatrix update_probsC2(CharacterVector v_states_names,
 
 // update_probsC3:
 // [[Rcpp::depends(RcppArmadillo)]]
-
 // Use arma namespaces explicitly to prevent namespace pollution
 
 // [[Rcpp::export]]
@@ -247,6 +246,76 @@ arma::mat update_probsC4(arma::vec v_states_index,
 // [[Rcpp::export]]
 arma::mat update_probsC5(const arma::vec& v_states_index,
                          const arma::vec& v_occupied_state,
+                         const Rcpp::List& l_trans_probs,
+                         const arma::vec& v_time_in_state) {
+  // initialize two integers to hold number of individuals and number of states
+  int num_i = v_time_in_state.size();
+  int num_states = v_states_index.size();
+  
+  // mat(n_rows, n_cols) initiated with zeros
+  arma::mat m_probs(num_i, num_states, arma::fill::zeros);
+  
+  // update probabilities of death 
+  // first converting probabilities to rates
+  double r_S1D = -std::log(1 - Rcpp::as<double>(l_trans_probs["p_S1D"]));
+  double r_S2D = -std::log(1 - Rcpp::as<double>(l_trans_probs["p_S2D"]));
+  
+  // applying the rate ratio and converting rates back to probabilities
+  arma::vec p_S1D = 1 - exp(-r_S1D * (1 + v_time_in_state * Rcpp::as<double>(l_trans_probs["rp_S1"])));
+  arma::vec p_S2D = 1 - exp(-r_S2D * (1 + v_time_in_state * Rcpp::as<double>(l_trans_probs["rp_S2"])));
+  
+  // cube(n_rows, n_cols, n_slices) initiated with zeros
+  arma::cube a_trans_probs(num_i, num_states, num_states);
+  
+  // assign probabilities to the slices
+  // probabilities moving from the first health state "H"
+  double p_HS1 = Rcpp::as<double>(l_trans_probs["p_HS1"]);
+  double p_HD = Rcpp::as<double>(l_trans_probs["p_HD"]);
+  double p_HH = 1 - (Rcpp::as<double>(l_trans_probs["p_HS1"]) + 
+                     Rcpp::as<double>(l_trans_probs["p_HD"]));
+  a_trans_probs.slice(0).col(0).fill(p_HH);
+  a_trans_probs.slice(0).col(1).fill(p_HS1);
+  a_trans_probs.slice(0).col(3).fill(p_HD);
+  
+  // probabilities moving from the second health state "S1"
+  double p_S1H = Rcpp::as<double>(l_trans_probs["p_S1H"]);
+  double p_S1S2 = Rcpp::as<double>(l_trans_probs["p_S1S2"]);
+  a_trans_probs.slice(1).col(0).fill(p_S1H);
+  a_trans_probs.slice(1).col(2).fill(p_S1S2);
+  a_trans_probs.slice(1).col(3) = p_S1D;
+  a_trans_probs.slice(1).col(1) = 1 - arma::sum(a_trans_probs.slice(1), 1);
+  
+  // probabilities moving from the third health state "S2"
+  a_trans_probs.slice(2).col(3) = p_S2D;
+  a_trans_probs.slice(2).col(2) = 1 - arma::sum(a_trans_probs.slice(2), 1);  
+  
+  // probabilities moving from the dead health state "D"
+  a_trans_probs.slice(3).col(3).fill(1);
+  
+  // assign probabilities from the slices based on occupied health state 
+  for(int i = 0; i < num_states; i++) {
+    arma::uvec state_index = arma::find(v_occupied_state == (i + 1));
+    m_probs.rows(state_index) = a_trans_probs.slice(i).rows(state_index);
+  }
+  
+  // Sanity check
+  arma::vec row_sums = sum(m_probs, 1);
+  if (arma::any(arma::abs(row_sums - 1) > 1e-12)) {
+    Rcpp::stop("Probabilities do not sum to 1");
+  }
+  
+  return m_probs;
+}
+
+// update_probsC6:
+// Enable C++11 via this plugin (Rcpp 0.10.3 or later), not critical
+// arma::ivec is a vector of type integer, it saves memory 
+// [[Rcpp::plugins(cpp11)]]
+// [[Rcpp::depends(RcppArmadillo)]]
+
+// [[Rcpp::export]]
+arma::mat update_probsC6(const arma::ivec& v_states_index,
+                         const arma::ivec& v_occupied_state,
                          const Rcpp::List& l_trans_probs,
                          const arma::vec& v_time_in_state) {
   // initialize two integers to hold number of individuals and number of states

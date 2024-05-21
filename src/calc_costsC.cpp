@@ -2,6 +2,7 @@
 
 // calc_costsC1
 // [[Rcpp::depends(RcppArmadillo)]]
+//
 // [[Rcpp::export]]
 Rcpp::NumericVector calc_costsC1(Rcpp::IntegerVector v_occupied_state,
                                  Rcpp::NumericVector v_states_costs,
@@ -40,8 +41,9 @@ Rcpp::NumericVector calc_costsC1(Rcpp::IntegerVector v_occupied_state,
 }
 
 // calc_costsC2
-// arma::ivec is an vector of type integer, it saves memory 
+// arma::ivec is a vector of type integer, it saves memory 
 // [[Rcpp::depends(RcppArmadillo)]]
+//
 // [[Rcpp::export]]
 arma::vec calc_costsC2(arma::ivec& v_occupied_state,
                        arma::vec& v_states_costs,
@@ -73,6 +75,7 @@ arma::vec calc_costsC2(arma::ivec& v_occupied_state,
 
 // calc_costsC3
 // [[Rcpp::depends(RcppArmadillo)]]
+//
 // [[Rcpp::export]]
 arma::vec calc_costsC3(arma::vec& v_occupied_state,
                        arma::vec& v_states_costs,
@@ -104,6 +107,7 @@ arma::vec calc_costsC3(arma::vec& v_occupied_state,
 
 // calc_costsC4
 // [[Rcpp::depends(RcppArmadillo)]]
+//
 // [[Rcpp::export]]
 arma::vec calc_costsC4(const arma::ivec& v_occupied_state,
                        const arma::vec& v_states_costs,
@@ -135,6 +139,7 @@ arma::vec calc_costsC4(const arma::ivec& v_occupied_state,
 
 // calc_costsC5
 // [[Rcpp::depends(RcppArmadillo)]]
+//
 // [[Rcpp::export]]
 arma::vec calc_costsC5(const arma::ivec& v_occupied_state,
                        const arma::vec& v_states_costs,

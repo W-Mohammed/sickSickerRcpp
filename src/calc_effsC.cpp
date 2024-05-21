@@ -1,6 +1,7 @@
 #include <RcppArmadillo.h>
 
 // calc_effsC1
+//
 // [[Rcpp::export]]
 Rcpp::NumericVector calc_effsC1(Rcpp::IntegerVector v_occupied_state,
                                 Rcpp::NumericVector v_states_utilities,
@@ -59,6 +60,7 @@ Rcpp::NumericVector calc_effsC1(Rcpp::IntegerVector v_occupied_state,
 
 // calc_effsC2
 // [[Rcpp::depends(RcppArmadillo)]]
+//
 // [[Rcpp::export]]
 arma::vec calc_effsC2(arma::vec v_occupied_state,
                       arma::vec v_states_utilities,
@@ -109,6 +111,7 @@ arma::vec calc_effsC2(arma::vec v_occupied_state,
 
 // calc_effsC3
 // [[Rcpp::depends(RcppArmadillo)]]
+//
 // [[Rcpp::export]]
 arma::vec calc_effsC3(const arma::vec& v_occupied_state,
                       const arma::vec& v_states_utilities,
@@ -159,7 +162,9 @@ arma::vec calc_effsC3(const arma::vec& v_occupied_state,
 
 
 // calc_effsC4
+// arma::ivec is a vector of type integer, it saves memory 
 // [[Rcpp::depends(RcppArmadillo)]]
+//
 // [[Rcpp::export]]
 arma::vec calc_effsC4(const arma::ivec& v_occupied_state,
                       const arma::vec& v_states_utilities,

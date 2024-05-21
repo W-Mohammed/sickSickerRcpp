@@ -253,6 +253,12 @@ C_results5 <- update_probsC5(
   l_trans_probs = l_trans_probs,
   v_time_in_state = v_time_in_state
 )
+C_results6 <- update_probsC6(
+  v_states_index = v_states_index,
+  v_occupied_state = v_occupied_state2,
+  l_trans_probs = l_trans_probs,
+  v_time_in_state = v_time_in_state
+)
 # check results
 identical(R_results1 |> `dimnames<-`(NULL), R_results2)
 identical(R_results2, R_results3)
@@ -260,6 +266,8 @@ identical(R_results1, C_results1)
 identical(C_results2, C_results2)
 identical(C_results2, C_results3)
 identical(C_results3, C_results4)
+identical(C_results4, C_results5)
+identical(C_results5, C_results6)
 
 #------------------------------------------------------------------------------#
 
@@ -309,6 +317,12 @@ update_probs_RvC <- bench::mark(
     v_time_in_state = v_time_in_state
   ),
   "C_5" = update_probsC5(
+    v_states_index = v_states_index,
+    v_occupied_state = v_occupied_state2,
+    l_trans_probs = l_trans_probs,
+    v_time_in_state = v_time_in_state
+  ),
+  "C_6" = update_probsC6(
     v_states_index = v_states_index,
     v_occupied_state = v_occupied_state2,
     l_trans_probs = l_trans_probs,
