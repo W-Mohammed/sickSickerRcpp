@@ -258,7 +258,7 @@ m_trans_probs2 <- update_probsV3(
 
 #------------------------------------------------------------------------------#
 
-# run the update_probsV function:
+# run the sampleV function:
 set.seed(seed)
 R_results1 <- sampleV1(
   m_trans_probs = m_trans_probs1,
@@ -283,6 +283,10 @@ set.seed(seed)
 C_results3 <- sampleC3(
   m_trans_probs = m_trans_probs2
 )
+set.seed(seed)
+C_results4 <- sampleC4(
+  m_trans_probs = m_trans_probs2
+)
 # check results
 R_results1[R_results1 == "H"]  <- 1
 R_results1[R_results1 == "S1"] <- 2
@@ -292,11 +296,11 @@ identical(R_results1 |> as.numeric(), R_results2)
 identical(R_results2, C_results1 |> as.numeric())
 identical(R_results2, C_results2[, 1])
 identical(C_results2[, 1], C_results3[, 1])
+identical(C_results3[, 1], C_results4[, 1])
 
 #------------------------------------------------------------------------------#
 
 # benchmark the functions
-
 sample_RvC <- bench::mark(
   "R_1" = sampleV1(
     m_trans_probs = m_trans_probs1,
@@ -313,6 +317,9 @@ sample_RvC <- bench::mark(
     m_trans_probs = m_trans_probs2
   ),
   "C_3" = sampleC3(
+    m_trans_probs = m_trans_probs2
+  ),
+  "C_4" = sampleC4(
     m_trans_probs = m_trans_probs2
   ),
   check = FALSE
