@@ -221,12 +221,32 @@ C_results4 <- calc_effsC4(
   v_util_t_decs = v_util_t_decs,
   v_time_in_state = v_time_in_state
 )
+C_results5 <- calc_effsC5(
+  v_occupied_state = v_occupied_state2,
+  v_states_utilities = v_states_utilities,
+  cycle_length = 1,
+  m_indi_features = m_indi_features,
+  v_util_coeffs = v_util_coeffs,
+  v_util_t_decs = v_util_t_decs,
+  v_time_in_state = v_time_in_state
+)
+C_results6 <- calc_effsC6(
+  v_occupied_state = v_occupied_state2,
+  v_states_utilities = v_states_utilities,
+  cycle_length = 1,
+  m_indi_features = m_indi_features,
+  v_util_coeffs = v_util_coeffs,
+  v_util_t_decs = v_util_t_decs,
+  v_time_in_state = v_time_in_state
+)
 # check results
 identical(R_results1, R_results1)
 identical(R_results2, C_results1)
 identical(C_results1, C_results2[, 1])
 identical(C_results2[, 1], C_results3[, 1])
 identical(C_results3[, 1], C_results4[, 1])
+identical(C_results4[, 1], C_results5[, 1])
+identical(C_results5[, 1], C_results6[, 1])
 
 #------------------------------------------------------------------------------#
 
@@ -287,7 +307,103 @@ calc_effs_RvC <- bench::mark(
     v_util_t_decs = v_util_t_decs,
     v_time_in_state = v_time_in_state
   ),
+  "C_5" = calc_effsC5(
+    v_occupied_state = v_occupied_state2,
+    v_states_utilities = v_states_utilities,
+    cycle_length = 1,
+    m_indi_features = m_indi_features,
+    v_util_coeffs = v_util_coeffs,
+    v_util_t_decs = v_util_t_decs,
+    v_time_in_state = v_time_in_state
+  ),
+  "C_6" = calc_effsC6(
+    v_occupied_state = v_occupied_state2,
+    v_states_utilities = v_states_utilities,
+    cycle_length = 1,
+    m_indi_features = m_indi_features,
+    v_util_coeffs = v_util_coeffs,
+    v_util_t_decs = v_util_t_decs,
+    v_time_in_state = v_time_in_state
+  ),
   check = FALSE
 )
 
 calc_effs_RvC[c("expression", "min", "median", "itr/sec", "n_gc", "mem_alloc")]
+
+calc_effs_RvC2 <- microbenchmark::microbenchmark(
+  "R_1" = calc_effsV1(
+    v_occupied_state = v_occupied_state,
+    v_states_utilities = v_states_utilities,
+    cycle_length = 1,
+    m_indi_features = m_indi_features,
+    v_util_coeffs = v_util_coeffs,
+    v_util_t_decs = v_util_t_decs,
+    v_time_in_state = v_time_in_state
+  ),
+  "R_2" = calc_effsV2(
+    v_occupied_state = v_occupied_state2,
+    v_states_utilities = v_states_utilities,
+    cycle_length = 1,
+    m_indi_features = m_indi_features,
+    v_util_coeffs = v_util_coeffs,
+    v_util_t_decs = v_util_t_decs,
+    v_time_in_state = v_time_in_state
+  ),
+  "C_1" = calc_effsC1(
+    v_occupied_state = v_occupied_state2,
+    v_states_utilities = v_states_utilities,
+    cycle_length = 1,
+    m_indi_features = m_indi_features,
+    v_util_coeffs = v_util_coeffs,
+    v_util_t_decs = v_util_t_decs,
+    v_time_in_state = v_time_in_state
+  ),
+  "C_2" = calc_effsC1(
+    v_occupied_state = v_occupied_state2,
+    v_states_utilities = v_states_utilities,
+    cycle_length = 1,
+    m_indi_features = m_indi_features,
+    v_util_coeffs = v_util_coeffs,
+    v_util_t_decs = v_util_t_decs,
+    v_time_in_state = v_time_in_state
+  ),
+  "C_3" = calc_effsC3(
+    v_occupied_state = v_occupied_state2,
+    v_states_utilities = v_states_utilities,
+    cycle_length = 1,
+    m_indi_features = m_indi_features,
+    v_util_coeffs = v_util_coeffs,
+    v_util_t_decs = v_util_t_decs,
+    v_time_in_state = v_time_in_state
+  ),
+  "C_4" = calc_effsC4(
+    v_occupied_state = v_occupied_state2,
+    v_states_utilities = v_states_utilities,
+    cycle_length = 1,
+    m_indi_features = m_indi_features,
+    v_util_coeffs = v_util_coeffs,
+    v_util_t_decs = v_util_t_decs,
+    v_time_in_state = v_time_in_state
+  ),
+  "C_5" = calc_effsC5(
+    v_occupied_state = v_occupied_state2,
+    v_states_utilities = v_states_utilities,
+    cycle_length = 1,
+    m_indi_features = m_indi_features,
+    v_util_coeffs = v_util_coeffs,
+    v_util_t_decs = v_util_t_decs,
+    v_time_in_state = v_time_in_state
+  ),
+  "C_6" = calc_effsC6(
+    v_occupied_state = v_occupied_state2,
+    v_states_utilities = v_states_utilities,
+    cycle_length = 1,
+    m_indi_features = m_indi_features,
+    v_util_coeffs = v_util_coeffs,
+    v_util_t_decs = v_util_t_decs,
+    v_time_in_state = v_time_in_state
+  )
+)
+
+calc_effs_RvC2
+plot(calc_effs_RvC2)

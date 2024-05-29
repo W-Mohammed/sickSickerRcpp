@@ -332,3 +332,63 @@ update_probs_RvC <- bench::mark(
 )
 
 update_probs_RvC[c("expression", "min", "median", "itr/sec", "n_gc", "mem_alloc")]
+
+update_probs_RvC2 <- microbenchmark::microbenchmark(
+  "R_1" = update_probsV1(
+    v_states_names = v_states_names,
+    v_occupied_state = v_occupied_state,
+    l_trans_probs = l_trans_probs,
+    v_time_in_state = v_time_in_state
+  ),
+  "R_2" = update_probsV2(
+    v_states_names = v_states_names,
+    v_occupied_state = v_occupied_state,
+    l_trans_probs = l_trans_probs,
+    v_time_in_state = v_time_in_state
+  ),
+  "R_3" = update_probsV3(
+    v_states_index = v_states_index,
+    v_occupied_state = v_occupied_state2,
+    l_trans_probs = l_trans_probs,
+    v_time_in_state = v_time_in_state
+  ),
+  "C_1" = update_probsC1(
+    v_states_names = v_states_names,
+    v_occupied_state = v_occupied_state,
+    l_trans_probs = l_trans_probs,
+    v_time_in_state = v_time_in_state
+  ),
+  "C_2" = update_probsC2(
+    v_states_names = v_states_names,
+    v_occupied_state = v_occupied_state,
+    l_trans_probs = l_trans_probs,
+    v_time_in_state = v_time_in_state
+  ),
+  "C_3" = update_probsC3(
+    v_states_names = v_states_names,
+    v_occupied_state = v_occupied_state,
+    l_trans_probs = l_trans_probs,
+    v_time_in_state = v_time_in_state
+  ),
+  "C_4" = update_probsC4(
+    v_states_index = v_states_index,
+    v_occupied_state = v_occupied_state2,
+    l_trans_probs = l_trans_probs,
+    v_time_in_state = v_time_in_state
+  ),
+  "C_5" = update_probsC5(
+    v_states_index = v_states_index,
+    v_occupied_state = v_occupied_state2,
+    l_trans_probs = l_trans_probs,
+    v_time_in_state = v_time_in_state
+  ),
+  "C_6" = update_probsC6(
+    v_states_index = v_states_index,
+    v_occupied_state = v_occupied_state2,
+    l_trans_probs = l_trans_probs,
+    v_time_in_state = v_time_in_state
+  )
+)
+
+update_probs_RvC2
+plot(update_probs_RvC2)

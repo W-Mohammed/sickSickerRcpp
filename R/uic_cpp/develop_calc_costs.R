@@ -176,6 +176,12 @@ C_results5 <- calc_costsC5(
   m_indi_features = m_indi_features,
   v_cost_coeffs = v_cost_coeffs
 )
+C_results6 <- calc_costsC6(
+  v_occupied_state = v_occupied_state2,
+  v_states_costs = v_states_costs,
+  m_indi_features = m_indi_features,
+  v_cost_coeffs = v_cost_coeffs
+)
 # check results
 identical(R_results1, R_results1)
 identical(R_results2, C_results1)
@@ -183,12 +189,13 @@ identical(C_results1, C_results2[, 1])
 identical(C_results2, C_results3)
 identical(C_results3, C_results4)
 identical(C_results4, C_results5)
+identical(C_results5, C_results6)
 
 #------------------------------------------------------------------------------#
 
 # benchmark the functions
 
-calc_effs_RvC <- bench::mark(
+calc_costs_RvC <- bench::mark(
   "R_1" = calc_costsV1(
     v_occupied_state = v_occupied_state,
     v_states_costs = v_states_costs,
@@ -231,7 +238,67 @@ calc_effs_RvC <- bench::mark(
     m_indi_features = m_indi_features,
     v_cost_coeffs = v_cost_coeffs
   ),
+  "C_6" = calc_costsC6(
+    v_occupied_state = v_occupied_state2,
+    v_states_costs = v_states_costs,
+    m_indi_features = m_indi_features,
+    v_cost_coeffs = v_cost_coeffs
+  ),
   check = FALSE
 )
 
-calc_effs_RvC[c("expression", "min", "median", "itr/sec", "n_gc", "mem_alloc")]
+calc_costs_RvC[c("expression", "min", "median", "itr/sec", "n_gc", "mem_alloc")]
+
+calc_costs_RvC2 <- microbenchmark::microbenchmark(
+  "R_1" = calc_costsV1(
+    v_occupied_state = v_occupied_state,
+    v_states_costs = v_states_costs,
+    m_indi_features = m_indi_features,
+    v_cost_coeffs = v_cost_coeffs
+  ),
+  "R_2" = calc_costsV2(
+    v_occupied_state = v_occupied_state,
+    v_states_costs = v_states_costs,
+    m_indi_features = m_indi_features,
+    v_cost_coeffs = v_cost_coeffs
+  ),
+  "C_1" = calc_costsC1(
+    v_occupied_state = v_occupied_state2,
+    v_states_costs = v_states_costs,
+    m_indi_features = m_indi_features,
+    v_cost_coeffs = v_cost_coeffs
+  ),
+  "C_2" = calc_costsC2(
+    v_occupied_state = v_occupied_state2,
+    v_states_costs = v_states_costs,
+    m_indi_features = m_indi_features,
+    v_cost_coeffs = v_cost_coeffs
+  ),
+  "C_3" = calc_costsC3(
+    v_occupied_state = v_occupied_state2,
+    v_states_costs = v_states_costs,
+    m_indi_features = m_indi_features,
+    v_cost_coeffs = v_cost_coeffs
+  ),
+  "C_4" = calc_costsC4(
+    v_occupied_state = v_occupied_state2,
+    v_states_costs = v_states_costs,
+    m_indi_features = m_indi_features,
+    v_cost_coeffs = v_cost_coeffs
+  ),
+  "C_5" = calc_costsC5(
+    v_occupied_state = v_occupied_state2,
+    v_states_costs = v_states_costs,
+    m_indi_features = m_indi_features,
+    v_cost_coeffs = v_cost_coeffs
+  ),
+  "C_6" = calc_costsC6(
+    v_occupied_state = v_occupied_state2,
+    v_states_costs = v_states_costs,
+    m_indi_features = m_indi_features,
+    v_cost_coeffs = v_cost_coeffs
+  )
+)
+
+calc_costs_RvC2
+plot(calc_costs_RvC2)

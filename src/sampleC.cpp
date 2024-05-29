@@ -2,6 +2,8 @@
 
 // sampleC1
 //
+// Limits data structures and supported methods to those provided by 'Rcpp'
+//
 // [[Rcpp::export]]
 Rcpp::IntegerVector sampleC1(Rcpp::NumericMatrix m_trans_probs) {
   
@@ -75,10 +77,11 @@ Rcpp::IntegerVector sampleC1(Rcpp::NumericMatrix m_trans_probs) {
 }
 
 // sampleC2
-// Enable C++11 via this plugin (Rcpp 0.10.3 or later)
-// [[Rcpp::plugins(cpp11)]]
-// [[Rcpp::depends(RcppArmadillo)]]
 //
+// Uses data structures and functions defined by Armadillo (arma)
+// Uses arma::trimatu to create an upper triangle and cumulative probabilities 
+//
+// [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]
 arma::uvec sampleC2(const arma::mat& m_trans_probs) {
   
@@ -116,10 +119,10 @@ arma::uvec sampleC2(const arma::mat& m_trans_probs) {
 }
 
 // sampleC3
-// Enable C++11 via this plugin (Rcpp 0.10.3 or later)
-// [[Rcpp::plugins(cpp11)]]
-// [[Rcpp::depends(RcppArmadillo)]]
 //
+// Returns arma::colv instead of arma's unsigned vector arma::uvec
+//
+// [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]
 arma::colvec sampleC3(const arma::mat& m_trans_probs) {
   
@@ -156,12 +159,11 @@ arma::colvec sampleC3(const arma::mat& m_trans_probs) {
   return v_health_states;
 }
 
-
 // sampleC4
-// Enable C++11 via this plugin (Rcpp 0.10.3 or later)
-// [[Rcpp::plugins(cpp11)]]
-// [[Rcpp::depends(RcppArmadillo)]]
 //
+// Uses arma::cumsum(m_trans_probs) instead of 'arma::trimatu * m_trans_probs' 
+//
+// [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]
 arma::colvec sampleC4(const arma::mat& m_trans_probs) {
   
@@ -195,5 +197,40 @@ arma::colvec sampleC4(const arma::mat& m_trans_probs) {
   return v_health_states;
 }
 
-// to print objects using R's print function, define the function:
-// Rcpp::Function printR("print");
+// sampleC5
+//
+// Returns arma::ivec instead of arma::colvec
+//
+// [[Rcpp::depends(RcppArmadillo)]]
+// [[Rcpp::export]]
+arma::ivec sampleC5(const arma::mat& m_trans_probs) {
+  
+  // Number of individuals and states 
+  int num_i = m_trans_probs.n_rows;
+  int num_states = m_trans_probs.n_cols;
+  
+  // Create matrix with row-wise cumulative transition probabilities
+  arma::mat m_cum_probs = arma::cumsum(m_trans_probs, 1);
+  
+  // Ensure that the maximum cumulative probabilities are equal to 1
+  if (arma::any(m_cum_probs.col(num_states - 1) > 1.000000)) {
+    Rcpp::stop("Error in multinomial sampling: probabilities do not sum to 1");
+  }
+  
+  // Sample random values from Uniform standard distribution for each individual
+  arma::vec v_rand_values = arma::randu<arma::vec>(num_i);
+  
+  // Repeat each sampled value to have as many copies as the number of states
+  arma::mat m_rand_values = arma::repmat(v_rand_values, 1, num_states);
+  
+  // Identify transitions, compare random samples to cumulative probabilities
+  arma::umat m_transitions = m_rand_values > m_cum_probs;
+  
+  // Sum transitions to identify health state in the next cycle
+  arma::uvec v_transitions = arma::sum(m_transitions, 1);
+  
+  // Identify health state to which each individual is transitioning
+  arma::ivec v_health_states = 1 + arma::conv_to<arma::ivec>::from(v_transitions);
+  
+  return v_health_states;
+}

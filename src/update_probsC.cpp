@@ -10,7 +10,9 @@ using Rcpp::_;
 using std::log;
 using std::exp;
 using std::fabs;
-
+//
+// Limits data structures and supported methods to those provided by 'Rcpp'
+//
 // [[Rcpp::export]]
 NumericMatrix update_probsC1(CharacterVector v_states_names,
                              CharacterVector v_occupied_state,
@@ -68,7 +70,9 @@ using Rcpp::_;
 using std::log;
 using std::exp;
 using std::fabs;
-
+//
+// Stops using column and row names
+//
 // [[Rcpp::export]]
 NumericMatrix update_probsC2(CharacterVector v_states_names,
                              CharacterVector v_occupied_state,
@@ -115,9 +119,10 @@ NumericMatrix update_probsC2(CharacterVector v_states_names,
 }
 
 // update_probsC3:
+// 
+// Uses arma in addition to Rcpp.
+//
 // [[Rcpp::depends(RcppArmadillo)]]
-// Use arma namespaces explicitly to prevent namespace pollution
-
 // [[Rcpp::export]]
 arma::mat update_probsC3(Rcpp::CharacterVector v_states_names,
                          Rcpp::CharacterVector v_occupied_state,
@@ -170,10 +175,11 @@ arma::mat update_probsC3(Rcpp::CharacterVector v_states_names,
 }
 
 // update_probsC4:
-// Enable C++11 via this plugin (Rcpp 0.10.3 or later), not critical
-// [[Rcpp::plugins(cpp11)]]
+// 
+// Switches from using characters and strings, v_states_names, to using numbers,
+// v_states_index
+// 
 // [[Rcpp::depends(RcppArmadillo)]]
-
 // [[Rcpp::export]]
 arma::mat update_probsC4(arma::vec v_states_index,
                          arma::vec v_occupied_state,
@@ -239,10 +245,10 @@ arma::mat update_probsC4(arma::vec v_states_index,
 }
 
 // update_probsC5:
-// Enable C++11 via this plugin (Rcpp 0.10.3 or later), not critical
-// [[Rcpp::plugins(cpp11)]]
+//
+// Passes const values or arguments compared to 'C4'.
+//
 // [[Rcpp::depends(RcppArmadillo)]]
-
 // [[Rcpp::export]]
 arma::mat update_probsC5(const arma::vec& v_states_index,
                          const arma::vec& v_occupied_state,
@@ -308,11 +314,10 @@ arma::mat update_probsC5(const arma::vec& v_states_index,
 }
 
 // update_probsC6:
-// Enable C++11 via this plugin (Rcpp 0.10.3 or later), not critical
-// arma::ivec is a vector of type integer, it saves memory 
-// [[Rcpp::plugins(cpp11)]]
+//
+// uses arma::ivec, a vector of type integer, which saves memory 
+//
 // [[Rcpp::depends(RcppArmadillo)]]
-
 // [[Rcpp::export]]
 arma::mat update_probsC6(const arma::ivec& v_states_index,
                          const arma::ivec& v_occupied_state,

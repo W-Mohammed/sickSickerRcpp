@@ -287,6 +287,10 @@ set.seed(seed)
 C_results4 <- sampleC4(
   m_trans_probs = m_trans_probs2
 )
+set.seed(seed)
+C_results5 <- sampleC5(
+  m_trans_probs = m_trans_probs2
+)
 # check results
 R_results1[R_results1 == "H"]  <- 1
 R_results1[R_results1 == "S1"] <- 2
@@ -297,6 +301,7 @@ identical(R_results2, C_results1 |> as.numeric())
 identical(R_results2, C_results2[, 1])
 identical(C_results2[, 1], C_results3[, 1])
 identical(C_results3[, 1], C_results4[, 1])
+identical(C_results4[, 1], C_results5[, 1])
 
 #------------------------------------------------------------------------------#
 
@@ -322,7 +327,39 @@ sample_RvC <- bench::mark(
   "C_4" = sampleC4(
     m_trans_probs = m_trans_probs2
   ),
+  "C_5" = sampleC5(
+    m_trans_probs = m_trans_probs2
+  ),
   check = FALSE
 )
 
 sample_RvC[c("expression", "min", "median", "itr/sec", "n_gc", "mem_alloc")]
+
+sample_RvC2 <- microbenchmark::microbenchmark(
+  "R_1" = sampleV1(
+    m_trans_probs = m_trans_probs1,
+    v_states_names = v_states_names
+  ),
+  "R_2" = sampleV2(
+    m_trans_probs = m_trans_probs2,
+    v_states_index = v_states_index
+  ),
+  "C_1" = sampleC1(
+    m_trans_probs = m_trans_probs2
+  ),
+  "C_2" = sampleC2(
+    m_trans_probs = m_trans_probs2
+  ),
+  "C_3" = sampleC3(
+    m_trans_probs = m_trans_probs2
+  ),
+  "C_4" = sampleC4(
+    m_trans_probs = m_trans_probs2
+  ),
+  "C_5" = sampleC5(
+    m_trans_probs = m_trans_probs2
+  )
+)
+
+sample_RvC2
+plot(sample_RvC2)
