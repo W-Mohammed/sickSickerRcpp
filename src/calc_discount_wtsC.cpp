@@ -109,18 +109,18 @@ std::vector<double> calc_discount_wtsC4(const double discount_rate,
 // Similar to 'C1' but allows the limited use of arma
 // 
 // [[Rcpp::export]]
-arma::vec calc_discount_wtsC5(const double discount_rate, 
-                                        const double num_cycles,
+std::vector<double> calc_discount_wtsC5(const double discount_rate, 
+                                        const int num_cycles,
                                         const double cycle_length) {
   
   // Calculate the number of time points
-  std::size_t size = static_cast<std::size_t>(num_cycles) + 1;
+  int cycles = num_cycles + 1;
   
   // Prepare the vector of size num_cycles + 1
-  arma::vec weights(size);
+  std::vector<double> weights(cycles);
   
   // Fill the vector with time values and calculate discounting weights
-  for (std::size_t i = 0; i < size; ++i) {
+  for (int i = 0; i < cycles; ++i) {
     double time = i * cycle_length;
     weights[i] = 1.0 / std::pow(1.0 + discount_rate, time);
   }

@@ -237,6 +237,14 @@ run_microSimV <- function(
       v_states_names = v_states_names
     )
     
+    # keep track of time in state at 't + 1'
+    stayed                   <- m_States[, t] == m_States[, t + 1] # check if remains in current state at 't + 1'
+    v_time_in_state[stayed]  <- v_time_in_state[stayed] + 1        # increment time spent in state
+    v_time_in_state[!stayed] <- 1                                  # reset time once transitioned
+    
+    # keep track of time in the model
+    m_indi_features[, "age"] <- m_indi_features[, "age"] + 1
+    
     # calculate the costs incurred in their 't + 1' health state
     m_Costs[, t + 1]  <- calc_costsV(
       v_occupied_state = m_States[, t + 1],
@@ -255,14 +263,6 @@ run_microSimV <- function(
       v_time_in_state    = v_time_in_state,
       cycle_length       = cycle_length
     )
-    
-    # keep track of time in current health state
-    stayed                   <- m_States[, t] == m_States[, t + 1] # check if remains in current state at 't + 1'
-    v_time_in_state[stayed]  <- v_time_in_state[stayed] + 1        # increment time spent in state
-    v_time_in_state[!stayed] <- 0                                  # reset time once transitioned
-    
-    # keep track of time in the model
-    m_indi_features[, "age"] <- m_indi_features[, "age"] + 1
     
   } # close the loop for the cycles 't'
   

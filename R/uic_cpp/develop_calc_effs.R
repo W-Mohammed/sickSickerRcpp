@@ -185,6 +185,15 @@ R_results2 <- calc_effsV2(
   v_time_in_state = v_time_in_state
 )
 # run the calc_effsC function:
+C_results0 <- calc_effsC0(
+  v_occupied_state = v_occupied_state,
+  v_states_utilities = v_states_utilities,
+  cycle_length = 1,
+  m_indi_features = m_indi_features,
+  v_util_coeffs = v_util_coeffs,
+  v_util_t_decs = v_util_t_decs,
+  v_time_in_state = v_time_in_state
+)
 C_results1 <- calc_effsC1(
   v_occupied_state = v_occupied_state2,
   v_states_utilities = v_states_utilities,
@@ -239,14 +248,24 @@ C_results6 <- calc_effsC6(
   v_util_t_decs = v_util_t_decs,
   v_time_in_state = v_time_in_state
 )
+C_results7 <- calc_effsC7(
+  v_occupied_state = v_occupied_state2,
+  v_states_utilities = v_states_utilities,
+  cycle_length = 1,
+  m_indi_features = m_indi_features,
+  v_util_coeffs = v_util_coeffs,
+  v_util_t_decs = v_util_t_decs,
+  v_time_in_state = v_time_in_state
+)
 # check results
-identical(R_results1, R_results1)
+identical(R_results1, C_results0)
 identical(R_results2, C_results1)
 identical(C_results1, C_results2[, 1])
 identical(C_results2[, 1], C_results3[, 1])
 identical(C_results3[, 1], C_results4[, 1])
 identical(C_results4[, 1], C_results5[, 1])
 identical(C_results5[, 1], C_results6[, 1])
+identical(C_results6[, 1], C_results7[, 1])
 
 #------------------------------------------------------------------------------#
 
@@ -264,6 +283,15 @@ calc_effs_RvC <- bench::mark(
   ),
   "R_2" = calc_effsV2(
     v_occupied_state = v_occupied_state2,
+    v_states_utilities = v_states_utilities,
+    cycle_length = 1,
+    m_indi_features = m_indi_features,
+    v_util_coeffs = v_util_coeffs,
+    v_util_t_decs = v_util_t_decs,
+    v_time_in_state = v_time_in_state
+  ),
+  "C_0" = calc_effsC0(
+    v_occupied_state = v_occupied_state,
     v_states_utilities = v_states_utilities,
     cycle_length = 1,
     m_indi_features = m_indi_features,
@@ -317,6 +345,15 @@ calc_effs_RvC <- bench::mark(
     v_time_in_state = v_time_in_state
   ),
   "C_6" = calc_effsC6(
+    v_occupied_state = v_occupied_state2,
+    v_states_utilities = v_states_utilities,
+    cycle_length = 1,
+    m_indi_features = m_indi_features,
+    v_util_coeffs = v_util_coeffs,
+    v_util_t_decs = v_util_t_decs,
+    v_time_in_state = v_time_in_state
+  ),
+  "C_7" = calc_effsC7(
     v_occupied_state = v_occupied_state2,
     v_states_utilities = v_states_utilities,
     cycle_length = 1,
@@ -349,6 +386,15 @@ calc_effs_RvC2 <- microbenchmark::microbenchmark(
     v_util_t_decs = v_util_t_decs,
     v_time_in_state = v_time_in_state
   ),
+  "C_0" = calc_effsC0(
+    v_occupied_state = v_occupied_state,
+    v_states_utilities = v_states_utilities,
+    cycle_length = 1,
+    m_indi_features = m_indi_features,
+    v_util_coeffs = v_util_coeffs,
+    v_util_t_decs = v_util_t_decs,
+    v_time_in_state = v_time_in_state
+  ),
   "C_1" = calc_effsC1(
     v_occupied_state = v_occupied_state2,
     v_states_utilities = v_states_utilities,
@@ -402,8 +448,18 @@ calc_effs_RvC2 <- microbenchmark::microbenchmark(
     v_util_coeffs = v_util_coeffs,
     v_util_t_decs = v_util_t_decs,
     v_time_in_state = v_time_in_state
+  ),
+  "C_7" = calc_effsC7(
+    v_occupied_state = v_occupied_state2,
+    v_states_utilities = v_states_utilities,
+    cycle_length = 1,
+    m_indi_features = m_indi_features,
+    v_util_coeffs = v_util_coeffs,
+    v_util_t_decs = v_util_t_decs,
+    v_time_in_state = v_time_in_state
   )
 )
 
 calc_effs_RvC2
 plot(calc_effs_RvC2)
+saveRDS(object = calc_effs_RvC2, file = "calc_effs_RvC2")

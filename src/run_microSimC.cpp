@@ -111,15 +111,15 @@ arma::ivec sampleC(const arma::mat& m_trans_probs) {
   return v_health_states;
 }
 
-// calc_costsC5
+// calc_costsC7
 //
 // Compared to the other C++ candidate functions, 'C5' removes loop and IF
-// statements in assigning costs, uses the arma::vec '.elem()' method to subset
-// vectors of type arma::vec, and arma::vec '.fill' method to populate a vector
-// with the value of a scalar.
+// statements in assigning costs, does not use the arma::vec '.elem()' method to
+// subset vectors of type arma::vec, nor arma::vec '.fill' method to populate a
+// vector with the value of a scalar.
 //
 // [[Rcpp::export]]
-arma::vec calc_costsC(const arma::ivec v_occupied_state,
+arma::vec calc_costsC(const arma::ivec& v_occupied_state,
                       const arma::vec& v_states_costs,
                       const arma::mat& m_indi_features,
                       const arma::vec& v_cost_coeffs) {
@@ -131,13 +131,18 @@ arma::vec calc_costsC(const arma::ivec v_occupied_state,
   int num_i = v_occupied_state.n_elem;
   
   // Estimate costs based on occupied state
-  arma::vec v_state_costs(num_i, arma::fill::zeros);
-  
-  // Efficiently handle costs based on state
-  v_state_costs.elem(find(v_occupied_state == 1)).fill(v_states_costs[0]);
-  v_state_costs.elem(find(v_occupied_state == 2)) = v_states_costs[1] + v_indi_costs.elem(find(v_occupied_state == 2));
-  v_state_costs.elem(find(v_occupied_state == 3)) = v_states_costs[2] + v_indi_costs.elem(find(v_occupied_state == 3));
-  v_state_costs.elem(find(v_occupied_state == 4)).fill(v_states_costs[3]);
+  arma::vec v_state_costs(num_i);
+  for (int i = 0; i < num_i; ++i) {
+    if (v_occupied_state[i] == 1) {
+      v_state_costs[i] = v_states_costs[0];
+    } else if (v_occupied_state[i] == 2) {
+      v_state_costs[i] = v_states_costs[1] + v_indi_costs[i];
+    } else if (v_occupied_state[i] == 3) {
+      v_state_costs[i] = v_states_costs[2] + v_indi_costs[i];
+    } else if (v_occupied_state[i] == 4) {
+      v_state_costs[i] = v_states_costs[3];
+    }
+  }
   
   return v_state_costs;
 }
@@ -164,7 +169,7 @@ arma::vec calc_effsC(const arma::ivec v_occupied_state,
   arma::vec v_ind_decrement = m_indi_features * v_util_coeffs;
   
   // Calculate time-dependent state-specific utility decrements
-  arma::vec time_decrement(num_i, arma::fill::zeros);
+  arma::vec time_decrement(num_i);
   for (int i = 0; i < num_i; ++i) {
     if (v_occupied_state[i] == 2) {
       time_decrement[i] = v_util_t_decs[0] * v_time_in_state[i];
@@ -177,7 +182,7 @@ arma::vec calc_effsC(const arma::ivec v_occupied_state,
   arma::vec decrement = v_ind_decrement + time_decrement;
   
   // Estimate utilities based on occupied state
-  arma::vec v_state_utility(num_i, arma::fill::zeros);
+  arma::vec v_state_utility(num_i);
   for (int i = 0; i < num_i; ++i) {
     if (v_occupied_state[i] == 1) {
       v_state_utility[i] = v_states_utilities[0] + decrement[i];
@@ -248,7 +253,7 @@ Rcpp::List run_microSimC1(arma::ivec& v_starting_states,
   arma::imat m_States(num_i, (num_cycles + 1), arma::fill::zeros);
   arma::mat m_Costs(num_i, (num_cycles + 1), arma::fill::zeros);
   arma::mat m_Effs(num_i, (num_cycles + 1), arma::fill::zeros);
-
+  
   // set random number generator stream (RNG seed) for reproducibility
   // this is done in R as WM still does not know how to do the same in C++
   set_seed(Rcpp::Named("seed", (starting_seed)));
@@ -258,7 +263,7 @@ Rcpp::List run_microSimC1(arma::ivec& v_starting_states,
   
   // indicate the initial health state:
   m_States.col(0) = v_starting_states;
-    
+  
   // estimate costs for all individuals at the initial health state:
   m_Costs.col(0) = calc_costsC(
     m_States.col(0), 
@@ -293,6 +298,19 @@ Rcpp::List run_microSimC1(arma::ivec& v_starting_states,
       m_trans_probs
     );
     
+    // Check if remains in current state at 't + 1'
+    arma::uvec stayed = arma::find(m_States.col(t) == m_States.col(t + 1));
+    arma::uvec transitioned = arma::find(m_States.col(t) != m_States.col(t + 1));
+    
+    // Increment time spent in state for those who remained in current state
+    v_time_in_state(stayed) += 1;
+    
+    // Reset time to 1 once transitioned
+    v_time_in_state(transitioned).ones();
+    
+    // Assuming "age" is the first column (index 0)
+    m_indi_features.col(age_column_index) += 1;    
+    
     // estimate costs for all individuals occupying health states at (t+1):
     m_Costs.col(t + 1) = calc_costsC(
       m_States.col(t + 1), 
@@ -312,33 +330,20 @@ Rcpp::List run_microSimC1(arma::ivec& v_starting_states,
       cycle_length
     );
     
-    // Check if remains in current state at 't + 1'
-    arma::uvec stayed = arma::find(m_States.col(t) == m_States.col(t + 1));
-    arma::uvec transitioned = arma::find(m_States.col(t) != m_States.col(t + 1));
-    
-    // Increment time spent in state for those who remained in current state
-    v_time_in_state(stayed) += 1;
-    
-    // Reset time once transitioned
-    v_time_in_state(transitioned).zeros();
-    
-    // Assuming "age" is the first column (index 0)
-    m_indi_features.col(age_column_index) += 1;    
-    
   } // end of loops through cycles:
   
   // calculate discount weights for both outcomes:
   arma::colvec v_c_dsc_wts = calc_discount_wtsC(
-      discount_rate_costs,
-      num_cycles,
-      cycle_length
+    discount_rate_costs,
+    num_cycles,
+    cycle_length
   );
   arma::colvec  v_e_dsc_wts = calc_discount_wtsC(
     discount_rate_QALYs,
     num_cycles,
     cycle_length
   );
-    
+  
   // compute summary stats:
   // total and average costs and QALYs (per individual):
   arma::vec v_total_costs = arma::sum(m_Costs, 1);

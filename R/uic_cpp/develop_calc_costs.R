@@ -23,7 +23,7 @@ calc_costsV1 <- function (
   v_indi_costs <- m_indi_features %*% v_cost_coeffs
   
   # estimate costs based on occupied state
-  v_state_costs                           <- rep(0, length(v_occupied_state))                              # by default the cost for everyone is zero
+  v_state_costs                           <- rep(NA, length(v_occupied_state))                              # by default the cost for everyone is zero
   v_state_costs[v_occupied_state == "H"]  <- v_states_costs["H"]                                           # update the cost if healthy
   v_state_costs[v_occupied_state == "S1"] <- v_states_costs["S1"] + v_indi_costs[v_occupied_state == "S1"] # update the cost if sick
   v_state_costs[v_occupied_state == "S2"] <- v_states_costs["S2"] + v_indi_costs[v_occupied_state == "S2"] # update the cost if sicker
@@ -42,7 +42,7 @@ calc_costsV2 <- function (
   v_indi_costs <- m_indi_features %*% v_cost_coeffs
   
   # estimate costs based on occupied state
-  v_state_costs                        <- rep(0, length(v_occupied_state))                        # by default the cost for everyone is zero
+  v_state_costs                        <- rep(NA, length(v_occupied_state))                        # by default the cost for everyone is zero
   v_state_costs[v_occupied_state == 1] <- v_states_costs[1]                                       # update the cost if healthy
   v_state_costs[v_occupied_state == 2] <- v_states_costs[2] + v_indi_costs[v_occupied_state == 2] # update the cost if sick
   v_state_costs[v_occupied_state == 3] <- v_states_costs[3] + v_indi_costs[v_occupied_state == 3] # update the cost if sicker
@@ -146,6 +146,12 @@ R_results2 <- calc_costsV2(
   v_cost_coeffs = v_cost_coeffs
 )
 # run the calc_costsC function:
+C_results0 <- calc_costsC0(
+  v_occupied_state = v_occupied_state,
+  v_states_costs = v_states_costs,
+  m_indi_features = m_indi_features,
+  v_cost_coeffs = v_cost_coeffs
+)
 C_results1 <- calc_costsC1(
   v_occupied_state = v_occupied_state2,
   v_states_costs = v_states_costs,
@@ -182,14 +188,22 @@ C_results6 <- calc_costsC6(
   m_indi_features = m_indi_features,
   v_cost_coeffs = v_cost_coeffs
 )
+C_results7 <- calc_costsC7(
+  v_occupied_state = v_occupied_state2,
+  v_states_costs = v_states_costs,
+  m_indi_features = m_indi_features,
+  v_cost_coeffs = v_cost_coeffs
+)
 # check results
 identical(R_results1, R_results1)
+identical(R_results1, C_results0)
 identical(R_results2, C_results1)
 identical(C_results1, C_results2[, 1])
 identical(C_results2, C_results3)
 identical(C_results3, C_results4)
 identical(C_results4, C_results5)
 identical(C_results5, C_results6)
+identical(C_results6, C_results7)
 
 #------------------------------------------------------------------------------#
 
@@ -203,6 +217,12 @@ calc_costs_RvC <- bench::mark(
     v_cost_coeffs = v_cost_coeffs
   ),
   "R_2" = calc_costsV2(
+    v_occupied_state = v_occupied_state,
+    v_states_costs = v_states_costs,
+    m_indi_features = m_indi_features,
+    v_cost_coeffs = v_cost_coeffs
+  ),
+  "C_0" = calc_costsC0(
     v_occupied_state = v_occupied_state,
     v_states_costs = v_states_costs,
     m_indi_features = m_indi_features,
@@ -239,6 +259,12 @@ calc_costs_RvC <- bench::mark(
     v_cost_coeffs = v_cost_coeffs
   ),
   "C_6" = calc_costsC6(
+    v_occupied_state = v_occupied_state2,
+    v_states_costs = v_states_costs,
+    m_indi_features = m_indi_features,
+    v_cost_coeffs = v_cost_coeffs
+  ),
+  "C_7" = calc_costsC7(
     v_occupied_state = v_occupied_state2,
     v_states_costs = v_states_costs,
     m_indi_features = m_indi_features,
@@ -262,6 +288,12 @@ calc_costs_RvC2 <- microbenchmark::microbenchmark(
     m_indi_features = m_indi_features,
     v_cost_coeffs = v_cost_coeffs
   ),
+  "C_0" = calc_costsC0(
+    v_occupied_state = v_occupied_state,
+    v_states_costs = v_states_costs,
+    m_indi_features = m_indi_features,
+    v_cost_coeffs = v_cost_coeffs
+  ),
   "C_1" = calc_costsC1(
     v_occupied_state = v_occupied_state2,
     v_states_costs = v_states_costs,
@@ -297,8 +329,15 @@ calc_costs_RvC2 <- microbenchmark::microbenchmark(
     v_states_costs = v_states_costs,
     m_indi_features = m_indi_features,
     v_cost_coeffs = v_cost_coeffs
+  ),
+  "C_7" = calc_costsC7(
+    v_occupied_state = v_occupied_state2,
+    v_states_costs = v_states_costs,
+    m_indi_features = m_indi_features,
+    v_cost_coeffs = v_cost_coeffs
   )
 )
 
 calc_costs_RvC2
 plot(calc_costs_RvC2)
+saveRDS(object = calc_costs_RvC2, file = "calc_costs_RvC2")
