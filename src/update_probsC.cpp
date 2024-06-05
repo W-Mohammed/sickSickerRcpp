@@ -1,32 +1,23 @@
 #include <RcppArmadillo.h>
 
-// update_probsC1:
-// Declare usage of Rcpp and std namespaces explicitly for clarity
-using Rcpp::CharacterVector;
-using Rcpp::NumericVector;
-using Rcpp::NumericMatrix;
-using Rcpp::List;
-using Rcpp::_;
-using std::log;
-using std::exp;
-using std::fabs;
+// update_probsC1
 //
-// Limits data structures and supported methods to those provided by 'Rcpp'
+// Like the R's 'V' version of the function, 'C1' utilizes named vector
 //
 // [[Rcpp::export]]
-NumericMatrix update_probsC1(CharacterVector v_states_names,
-                             CharacterVector v_occupied_state,
-                             List l_trans_probs,
-                             NumericVector v_time_in_state) {
+Rcpp::NumericMatrix update_probsC1(const Rcpp::CharacterVector& v_states_names,
+                                   const Rcpp::CharacterVector& v_occupied_state,
+                                   const Rcpp::List& l_trans_probs,
+                                   const Rcpp::NumericVector& v_time_in_state) {
   
   int n = v_time_in_state.size();
-  NumericMatrix m_probs(n, v_states_names.size());
+  Rcpp::NumericMatrix m_probs(n, v_states_names.size());
   Rcpp::rownames(m_probs) = v_occupied_state;
   Rcpp::colnames(m_probs) = v_states_names;
   
   double r_S1D = -log(1 - Rcpp::as<double>(l_trans_probs["p_S1D"]));
   double r_S2D = -log(1 - Rcpp::as<double>(l_trans_probs["p_S2D"]));
-  NumericVector p_S1D(n), p_S2D(n), p_HD(n);
+  Rcpp::NumericVector p_S1D(n), p_S2D(n), p_HD(n);
   
   for (int i = 0; i < n; ++i) {
     if (v_occupied_state[i] == "S1") {
@@ -40,19 +31,19 @@ NumericMatrix update_probsC1(CharacterVector v_states_names,
   
   for (int i = 0; i < n; ++i) {
     if (v_occupied_state[i] == "H") {
-      m_probs(i, _) = NumericVector::create(1 - Rcpp::as<double>(l_trans_probs["p_HS1"]) - p_HD[i], Rcpp::as<double>(l_trans_probs["p_HS1"]), 0, p_HD[i]);
+      m_probs(i, Rcpp::_) = Rcpp::NumericVector::create(1 - Rcpp::as<double>(l_trans_probs["p_HS1"]) - p_HD[i], Rcpp::as<double>(l_trans_probs["p_HS1"]), 0, p_HD[i]);
     } else if (v_occupied_state[i] == "S1") {
-      m_probs(i, _) = NumericVector::create(Rcpp::as<double>(l_trans_probs["p_S1H"]), 1 - Rcpp::as<double>(l_trans_probs["p_S1S2"]) - Rcpp::as<double>(l_trans_probs["p_S1H"]) - p_S1D[i], Rcpp::as<double>(l_trans_probs["p_S1S2"]), p_S1D[i]);
+      m_probs(i, Rcpp::_) = Rcpp::NumericVector::create(Rcpp::as<double>(l_trans_probs["p_S1H"]), 1 - Rcpp::as<double>(l_trans_probs["p_S1S2"]) - Rcpp::as<double>(l_trans_probs["p_S1H"]) - p_S1D[i], Rcpp::as<double>(l_trans_probs["p_S1S2"]), p_S1D[i]);
     } else if (v_occupied_state[i] == "S2") {
-      m_probs(i, _) = NumericVector::create(0, 0, 1 - p_S2D[i], p_S2D[i]);
+      m_probs(i, Rcpp::_) = Rcpp::NumericVector::create(0, 0, 1 - p_S2D[i], p_S2D[i]);
     } else if (v_occupied_state[i] == "D") {
-      m_probs(i, _) = NumericVector::create(0, 0, 0, 1);
+      m_probs(i, Rcpp::_) = Rcpp::NumericVector::create(0, 0, 0, 1);
     }
   }
   
   // Sanity check
   for (int i = 0; i < n; ++i) {
-    if (fabs(sum(m_probs(i, _)) - 1) > 1e-12) {
+    if (fabs(sum(m_probs(i, Rcpp::_)) - 1) > 1e-12) {
       Rcpp::stop("Probabilities do not sum to 1");
     }
   }
@@ -60,31 +51,22 @@ NumericMatrix update_probsC1(CharacterVector v_states_names,
   return m_probs;
 }
 
-// update_probsC2:
-// Declare usage of Rcpp and std namespaces explicitly for clarity
-using Rcpp::CharacterVector;
-using Rcpp::NumericVector;
-using Rcpp::NumericMatrix;
-using Rcpp::List;
-using Rcpp::_;
-using std::log;
-using std::exp;
-using std::fabs;
+// update_probsC2
 //
-// Stops using column and row names
+// Similar to 'C1' but stops using column and row names
 //
 // [[Rcpp::export]]
-NumericMatrix update_probsC2(CharacterVector v_states_names,
-                             CharacterVector v_occupied_state,
-                             List l_trans_probs,
-                             NumericVector v_time_in_state) {
+Rcpp::NumericMatrix update_probsC2(Rcpp::CharacterVector v_states_names,
+                                   Rcpp::CharacterVector v_occupied_state,
+                                   Rcpp::List l_trans_probs,
+                                   Rcpp::NumericVector v_time_in_state) {
   
   int n = v_time_in_state.size();
-  NumericMatrix m_probs(n, v_states_names.size());
+  Rcpp::NumericMatrix m_probs(n, v_states_names.size());
   
   double r_S1D = -log(1 - Rcpp::as<double>(l_trans_probs["p_S1D"]));
   double r_S2D = -log(1 - Rcpp::as<double>(l_trans_probs["p_S2D"]));
-  NumericVector p_S1D(n), p_S2D(n), p_HD(n);
+  Rcpp::NumericVector p_S1D(n), p_S2D(n), p_HD(n);
   
   for (int i = 0; i < n; ++i) {
     if (v_occupied_state[i] == "S1") {
@@ -98,19 +80,19 @@ NumericMatrix update_probsC2(CharacterVector v_states_names,
   
   for (int i = 0; i < n; ++i) {
     if (v_occupied_state[i] == "H") {
-      m_probs(i, _) = NumericVector::create(1 - Rcpp::as<double>(l_trans_probs["p_HS1"]) - p_HD[i], Rcpp::as<double>(l_trans_probs["p_HS1"]), 0, p_HD[i]);
+      m_probs(i, Rcpp::_) = Rcpp::NumericVector::create(1 - Rcpp::as<double>(l_trans_probs["p_HS1"]) - p_HD[i], Rcpp::as<double>(l_trans_probs["p_HS1"]), 0, p_HD[i]);
     } else if (v_occupied_state[i] == "S1") {
-      m_probs(i, _) = NumericVector::create(Rcpp::as<double>(l_trans_probs["p_S1H"]), 1 - Rcpp::as<double>(l_trans_probs["p_S1S2"]) - Rcpp::as<double>(l_trans_probs["p_S1H"]) - p_S1D[i], Rcpp::as<double>(l_trans_probs["p_S1S2"]), p_S1D[i]);
+      m_probs(i, Rcpp::_) = Rcpp::NumericVector::create(Rcpp::as<double>(l_trans_probs["p_S1H"]), 1 - Rcpp::as<double>(l_trans_probs["p_S1S2"]) - Rcpp::as<double>(l_trans_probs["p_S1H"]) - p_S1D[i], Rcpp::as<double>(l_trans_probs["p_S1S2"]), p_S1D[i]);
     } else if (v_occupied_state[i] == "S2") {
-      m_probs(i, _) = NumericVector::create(0, 0, 1 - p_S2D[i], p_S2D[i]);
+      m_probs(i, Rcpp::_) = Rcpp::NumericVector::create(0, 0, 1 - p_S2D[i], p_S2D[i]);
     } else if (v_occupied_state[i] == "D") {
-      m_probs(i, _) = NumericVector::create(0, 0, 0, 1);
+      m_probs(i, Rcpp::_) = Rcpp::NumericVector::create(0, 0, 0, 1);
     }
   }
   
   // Sanity check
   for (int i = 0; i < n; ++i) {
-    if (fabs(sum(m_probs(i, _)) - 1) > 1e-12) {
+    if (fabs(sum(m_probs(i, Rcpp::_)) - 1) > 1e-12) {
       Rcpp::stop("Probabilities do not sum to 1");
     }
   }
@@ -118,7 +100,7 @@ NumericMatrix update_probsC2(CharacterVector v_states_names,
   return m_probs;
 }
 
-// update_probsC3:
+// update_probsC3
 // 
 // Uses arma in addition to Rcpp.
 //
@@ -127,7 +109,7 @@ NumericMatrix update_probsC2(CharacterVector v_states_names,
 arma::mat update_probsC3(Rcpp::CharacterVector v_states_names,
                          Rcpp::CharacterVector v_occupied_state,
                          Rcpp::List l_trans_probs,
-                         NumericVector v_time_in_state) {
+                         Rcpp::NumericVector v_time_in_state) {
   
   int n = v_time_in_state.size();
   arma::mat m_probs(n, v_states_names.size());
@@ -174,7 +156,7 @@ arma::mat update_probsC3(Rcpp::CharacterVector v_states_names,
   return m_probs;
 }
 
-// update_probsC4:
+// update_probsC4
 // 
 // Switches from using characters and strings, v_states_names, to using numbers,
 // v_states_index
@@ -244,7 +226,7 @@ arma::mat update_probsC4(arma::vec v_states_index,
   return m_probs;
 }
 
-// update_probsC5:
+// update_probsC5
 //
 // Passes const values or arguments compared to 'C4'.
 //
@@ -313,7 +295,7 @@ arma::mat update_probsC5(const arma::vec& v_states_index,
   return m_probs;
 }
 
-// update_probsC6:
+// update_probsC6
 //
 // uses arma::ivec, a vector of type integer, which saves memory 
 //

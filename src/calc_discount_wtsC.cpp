@@ -127,3 +127,23 @@ std::vector<double> calc_discount_wtsC5(const double discount_rate,
   
   return weights;
 }
+
+// calc_discount_wtsC6
+// 
+// Similar to 'C3' but allows the limited use of Rcpp
+// 
+// [[Rcpp::export]]
+Rcpp::NumericVector calc_discount_wtsC6(const double discount_rate,
+                                  const int num_cycles,
+                                  const double cycle_length) {
+  // Prepare object of size num_cycles + 1
+  int time = num_cycles + 1;
+  Rcpp::NumericVector weights(time); // Properly initialize the vector
+  
+  // Calculate discounting weights using element-wise operation
+  for (int i = 0; i < time; ++i) {
+    weights[i] = 1.0 / pow(1.0 + discount_rate, i * cycle_length);
+  }
+  
+  return weights;
+}

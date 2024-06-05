@@ -1,8 +1,86 @@
 #include <RcppArmadillo.h>
 
+// sampleC0
+//
+// Like the R's 'V' version of the function, 'C0' utilizes named vector
+//
+// [[Rcpp::export]]
+Rcpp::CharacterVector sampleC0(const Rcpp::NumericMatrix& m_trans_probs,
+                               const Rcpp::CharacterVector& v_states_names) {
+  
+  // Number of individuals and states 
+  int num_i = m_trans_probs.nrow();
+  int num_states = m_trans_probs.ncol();
+  
+  // Create an upper triangular matrix of ones
+  Rcpp::NumericMatrix m_upper_tri(num_states, num_states);
+  for (int i = 0; i < num_states; i++) {
+    for (int j = i; j < num_states; j++) {
+      m_upper_tri(i, j) = 1;
+    }
+  }
+  
+  // Create matrix with row-wise cumulative transition probabilities
+  Rcpp::NumericMatrix m_cum_probs(num_i, num_states);
+  for (int i = 0; i < num_i; i++) {
+    for (int j = 0; j < num_states; j++) {
+      for (int k = 0; k < num_states; k++) {
+        m_cum_probs(i, j) += m_trans_probs(i, k) * m_upper_tri(k, j);
+      }
+    }
+  }
+  
+  // Ensure that the maximum cumulative probabilities are equal to 1
+  for (int i = 0; i < num_i; i++) {
+    if (m_cum_probs(i, num_states - 1) > 1.000000) {
+      Rcpp::stop("Error in multinomial sampling: probabilities do not sum to 1");
+    }
+  }
+  
+  // Sample random values from Uniform standard distribution for each individual
+  Rcpp::NumericVector v_rand_values = Rcpp::runif(num_i);
+  
+  // Repeat each sampled value to have as many copies as the number of states
+  Rcpp::NumericMatrix m_rand_values(num_i, num_states);
+  for (int i = 0; i < num_i; i++) {
+    for (int j = 0; j < num_states; j++) {
+      m_rand_values(i, j) = v_rand_values[i];
+    }
+  }
+  
+  // Identify transitions, compare random samples to cumulative probabilities
+  Rcpp::LogicalMatrix m_transitions(num_i, num_states);
+  for (int i = 0; i < num_i; i++) {
+    for (int j = 0; j < num_states; j++) {
+      m_transitions(i, j) = m_rand_values(i, j) > m_cum_probs(i, j);
+    }
+  }
+  
+  // Sum transitions to identify health state in next cycle
+  Rcpp::IntegerVector v_transitions(num_i);
+  for (int i = 0; i < num_i; i++) {
+    int sum_transitions = 0;
+    for (int j = 0; j < num_states; j++) {
+      if (m_transitions(i, j)) {
+        sum_transitions++;
+      }
+    }
+    v_transitions[i] = sum_transitions;
+  }
+  
+  // Identify health state to which each individual is transitioning
+  Rcpp::CharacterVector v_health_states(num_i);
+  for (int i = 0; i < num_i; i++) {
+    v_health_states[i] = v_states_names[v_transitions[i]];
+  }
+  
+  return v_health_states;
+}
+
 // sampleC1
 //
-// Limits data structures and supported methods to those provided by 'Rcpp'
+// Limits data structures and supported methods to those provided by 'Rcpp'.
+// Stops using named vectors
 //
 // [[Rcpp::export]]
 Rcpp::IntegerVector sampleC1(Rcpp::NumericMatrix m_trans_probs) {

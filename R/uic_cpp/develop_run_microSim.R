@@ -188,16 +188,14 @@ run_microSimV <- function(
   # create matrices to capture states' names, associated costs and QALYs
   m_States <- m_Costs <- m_Effs <-  matrix(
     nrow = num_i,
-    ncol = num_cycles + 1,
-    dimnames = list(paste("ind",   1:num_i,    sep ="_"),
-                    paste("cycle", 0:num_cycles, sep ="_"))
+    ncol = num_cycles + 1
   )
   
   # set the seed for every individual for the random number generator
   set.seed(starting_seed)
   
   # initialize parameter tracking time in current state
-  v_time_in_state <- rep(0, times = num_i)
+  v_time_in_state <- rep(1, times = num_i)
   
   # get the initial health state
   m_States[, 1] <- v_starting_states
@@ -312,8 +310,8 @@ run_microSimV <- function(
 
 # define function inputs:
 ## General parameters
-num_i               <- 1e6               # number of simulated individuals
-num_cycles          <- 30                # time horizon if each cycle is a year long
+num_i               <- 5               # number of simulated individuals
+num_cycles          <- 5                # time horizon if each cycle is a year long
 cycle_length        <- 1                 # length of cycle (in years)
 seed                <- 1234              # random number generator state
 wtp                 <- 30000             # Willingness to pay for each QALY ($)
@@ -327,6 +325,20 @@ prop_females        <- 0.6               # proportion of females in the simulate
 prop_males          <- 1 - prop_females  # proportion of males in the simulated population
 set.seed(seed)                           # set a seed to ensure reproducible samples
 m_indi_features     <- cbind(            # simulate individuals characteristics
+  "age" = rnorm(                         # get random samples for 'age' from a normal distribution
+    n = num_i,
+    mean = mean_age,
+    sd = sd_age
+  ),
+  "sex" = sample(                        # get random samples for 'sex' based on sex distribution
+    x = c(0, 1),
+    size = num_i,
+    replace = TRUE,
+    prob = c(prop_females, prop_males)
+  )
+)
+set.seed(seed)                           # set a seed to ensure reproducible samples
+m_indi_features2     <- cbind(           # simulate individuals characteristics
   "age" = rnorm(                         # get random samples for 'age' from a normal distribution
     n = num_i,
     mean = mean_age,
@@ -437,46 +449,64 @@ R_results1 <- run_microSimV(
   cycle_length        = cycle_length,
   starting_seed       = seed
 )
-R_results2 <- run_microSimV(
-  v_starting_states   = v_starting_states,
-  num_i               = num_i,
-  num_cycles          = num_cycles,
-  m_indi_features     = m_indi_features,
-  v_states_names      = v_states_names,
-  v_states_costs      = v_states_costs1,
-  v_cost_coeffs       = v_cost_coeffs,
-  v_states_utilities  = v_states_utilities1,
-  v_util_coeffs       = v_util_coeffs,
-  v_util_t_decs       = v_util_t_decs,
-  l_trans_probs       = l_trans_probs,
-  discount_rate_costs = discount_rate_costs,
-  discount_rate_QALYs = discount_rate_QALYs,
-  cycle_length        = cycle_length,
-  starting_seed       = seed
-)
-R_results3 <- run_microSimV(
-  v_starting_states   = v_starting_states,
-  num_i               = num_i,
-  num_cycles          = num_cycles,
-  m_indi_features     = m_indi_features,
-  v_states_names      = v_states_names,
-  v_states_costs      = v_states_costs2,
-  v_cost_coeffs       = v_cost_coeffs,
-  v_states_utilities  = v_states_utilities2,
-  v_util_coeffs       = v_util_coeffs,
-  v_util_t_decs       = v_util_t_decs,
-  l_trans_probs       = l_trans_probs,
-  discount_rate_costs = discount_rate_costs,
-  discount_rate_QALYs = discount_rate_QALYs,
-  cycle_length        = cycle_length,
-  starting_seed       = seed
-)
+# R_results2 <- run_microSimV(
+#   v_starting_states   = v_starting_states,
+#   num_i               = num_i,
+#   num_cycles          = num_cycles,
+#   m_indi_features     = m_indi_features,
+#   v_states_names      = v_states_names,
+#   v_states_costs      = v_states_costs1,
+#   v_cost_coeffs       = v_cost_coeffs,
+#   v_states_utilities  = v_states_utilities1,
+#   v_util_coeffs       = v_util_coeffs,
+#   v_util_t_decs       = v_util_t_decs,
+#   l_trans_probs       = l_trans_probs,
+#   discount_rate_costs = discount_rate_costs,
+#   discount_rate_QALYs = discount_rate_QALYs,
+#   cycle_length        = cycle_length,
+#   starting_seed       = seed
+# )
+# R_results3 <- run_microSimV(
+#   v_starting_states   = v_starting_states,
+#   num_i               = num_i,
+#   num_cycles          = num_cycles,
+#   m_indi_features     = m_indi_features,
+#   v_states_names      = v_states_names,
+#   v_states_costs      = v_states_costs2,
+#   v_cost_coeffs       = v_cost_coeffs,
+#   v_states_utilities  = v_states_utilities2,
+#   v_util_coeffs       = v_util_coeffs,
+#   v_util_t_decs       = v_util_t_decs,
+#   l_trans_probs       = l_trans_probs,
+#   discount_rate_costs = discount_rate_costs,
+#   discount_rate_QALYs = discount_rate_QALYs,
+#   cycle_length        = cycle_length,
+#   starting_seed       = seed
+# )
 # run the run_microSimC function:
+C_results0 <- run_microSimC0(
+  v_starting_states   = v_starting_states,
+  num_i               = num_i,
+  num_cycles          = num_cycles,
+  m_indi_features     = m_indi_features,
+  v_states_names      = v_states_names,
+  v_states_costs      = v_states_costs,
+  v_cost_coeffs       = v_cost_coeffs,
+  v_states_utilities  = v_states_utilities,
+  v_util_coeffs       = v_util_coeffs,
+  v_util_t_decs       = v_util_t_decs,
+  l_trans_probs       = l_trans_probs,
+  discount_rate_costs = discount_rate_costs,
+  discount_rate_QALYs = discount_rate_QALYs,
+  cycle_length        = cycle_length,
+  starting_seed       = seed,
+  age_column_index    = which(colnames(m_indi_features) == "age") - 1
+)
 C_results1 <- run_microSimC1(
   v_starting_states   = v_starting_statesC,
   num_i               = num_i,
   num_cycles          = num_cycles,
-  m_indi_features     = m_indi_features,
+  m_indi_features     = m_indi_features2,
   v_states_index      = v_states_index,
   v_states_costs      = v_states_costs,
   v_cost_coeffs       = v_cost_coeffs,
@@ -491,18 +521,50 @@ C_results1 <- run_microSimC1(
   age_column_index    = which(colnames(m_indi_features) == "age") - 1
 )
 # check results
+## Rcpp (C0):
+identical(R_results1$mean_costs, C_results0$mean_costs)
+identical(R_results1$v_total_costs, C_results0$v_total_costs)
+testthat::expect_equal(R_results1$mean_costs, C_results0$mean_costs)
+testthat::expect_equal(R_results1$v_total_costs, C_results0$v_total_costs)
+R_results1$mean_costs - C_results0$mean_costs
+identical(R_results1$mean_qalys, C_results0$mean_qalys)
+identical(R_results1$v_total_qalys, C_results0$v_total_qalys)
+testthat::expect_equal(R_results1$mean_qalys, C_results0$mean_qalys)
+testthat::expect_equal(R_results1$v_total_qalys, C_results0$v_total_qalys)
+R_results1$mean_qalys - C_results0$mean_qalys
+
+identical(R_results1$mean_Dcosts, C_results0$mean_Dcosts)
+identical(R_results1$v_total_Dcosts[,1], C_results0$v_total_Dcosts)
+testthat::expect_equal(R_results1$mean_Dcosts, C_results0$mean_Dcosts)
+testthat::expect_equal(R_results1$v_total_Dcosts[,1], C_results0$v_total_Dcosts)
+R_results1$mean_Dcosts - C_results0$mean_Dcosts
+identical(R_results1$mean_Dqalys, C_results0$mean_Dqalys)
+identical(R_results1$v_total_Dqalys[,1], C_results0$v_total_Dqalys)
+testthat::expect_equal(R_results1$mean_Dqalys, C_results0$mean_Dqalys)
+testthat::expect_equal(R_results1$v_total_Dqalys[,1], C_results0$v_total_Dqalys)
+R_results1$mean_Dqalys - C_results0$mean_Dqalys
+
+## Arma (C1):
 identical(R_results1$mean_costs, C_results1$mean_costs)
+identical(R_results1$v_total_costs, C_results1$v_total_costs[,1])
 testthat::expect_equal(R_results1$mean_costs, C_results1$mean_costs)
+testthat::expect_equal(R_results1$v_total_costs, C_results1$v_total_costs[,1])
 R_results1$mean_costs - C_results1$mean_costs
 identical(R_results1$mean_qalys, C_results1$mean_qalys)
+identical(R_results1$v_total_qalys, C_results1$v_total_qalys[,1])
 testthat::expect_equal(R_results1$mean_qalys, C_results1$mean_qalys)
+testthat::expect_equal(R_results1$v_total_qalys, C_results1$v_total_qalys[,1])
 R_results1$mean_qalys - C_results1$mean_qalys
 
 identical(R_results1$mean_Dcosts, C_results1$mean_Dcosts)
+identical(R_results1$v_total_Dcosts, C_results1$v_total_Dcosts)
 testthat::expect_equal(R_results1$mean_Dcosts, C_results1$mean_Dcosts)
+testthat::expect_equal(R_results1$v_total_Dcosts, C_results1$v_total_Dcosts)
 R_results1$mean_Dcosts - C_results1$mean_Dcosts
 identical(R_results1$mean_Dqalys, C_results1$mean_Dqalys)
+identical(R_results1$v_total_Dqalys, C_results1$v_total_Dqalys)
 testthat::expect_equal(R_results1$mean_Dqalys, C_results1$mean_Dqalys)
+testthat::expect_equal(R_results1$v_total_Dqalys, C_results1$v_total_Dqalys)
 R_results1$mean_Dqalys - C_results1$mean_Dqalys
 
 #------------------------------------------------------------------------------#
@@ -590,3 +652,4 @@ run_microSim_RvC2 <- microbenchmark::microbenchmark(
 
 run_microSim_RvC2
 plot(run_microSim_RvC2)
+saveRDS(object = calc_effs_RvC2, file = "calc_effs_RvC2")

@@ -99,6 +99,16 @@ C_results10 <- calc_discount_wtsC5(
   num_cycles    = num_cycles,
   cycle_length  = 0.5
 )
+C_results11 <- calc_discount_wtsC6(
+  discount_rate = discount_rate_costs,
+  num_cycles    = num_cycles,
+  cycle_length  = cycle_length
+)
+C_results12 <- calc_discount_wtsC6(
+  discount_rate = discount_rate_costs,
+  num_cycles    = num_cycles,
+  cycle_length  = 0.5
+)
 # check results
 identical(R_results1, C_results1)
 identical(R_results2, C_results2)
@@ -107,10 +117,13 @@ identical(R_results2, C_results4)
 identical(R_results1, C_results5)
 identical(R_results2, C_results6)
 identical(R_results1, C_results7)
+testthat::expect_equal(R_results1, C_results7)
 identical(R_results2, C_results8)
+testthat::expect_equal(R_results2, C_results8)
 identical(R_results1, C_results9)
 identical(R_results2, C_results10)
-
+identical(R_results1, C_results11)
+identical(R_results2, C_results12)
 #------------------------------------------------------------------------------#
 
 # benchmark the functions
@@ -141,6 +154,11 @@ calc_discount_wts_RvC <- bench::mark(
     cycle_length  = cycle_length
   ),
   "C_5" = calc_discount_wtsC5(
+    discount_rate = discount_rate_costs,
+    num_cycles    = num_cycles,
+    cycle_length  = cycle_length
+  ),
+  "C_6" = calc_discount_wtsC6(
     discount_rate = discount_rate_costs,
     num_cycles    = num_cycles,
     cycle_length  = cycle_length
@@ -181,8 +199,14 @@ calc_discount_wts_RvC2 <- microbenchmark::microbenchmark(
     discount_rate = discount_rate_costs,
     num_cycles    = num_cycles,
     cycle_length  = cycle_length
+  ),
+  "C_6" = calc_discount_wtsC6(
+    discount_rate = discount_rate_costs,
+    num_cycles    = num_cycles,
+    cycle_length  = cycle_length
   )
 )
 
 calc_discount_wts_RvC2
 plot(calc_discount_wts_RvC2)
+saveRDS(object = calc_discount_wts_RvC2, file = "calc_discount_wts_RvC2")

@@ -271,6 +271,11 @@ R_results2 <- sampleV2(
 )
 # run the sampleC function:
 set.seed(seed)
+C_results0 <- sampleC0(
+  m_trans_probs = m_trans_probs1,
+  v_states_names = v_states_names
+)
+set.seed(seed)
 C_results1 <- sampleC1(
   m_trans_probs = m_trans_probs2
 ) |> 
@@ -292,16 +297,19 @@ C_results5 <- sampleC5(
   m_trans_probs = m_trans_probs2
 )
 # check results
-R_results1[R_results1 == "H"]  <- 1
-R_results1[R_results1 == "S1"] <- 2
-R_results1[R_results1 == "S2"] <- 3
-R_results1[R_results1 == "D"]  <- 4
-identical(R_results1 |> as.numeric(), R_results2)
+identical(R_results1, C_results0)
+R_results1.1 <- R_results1
+R_results1.1[R_results1 == "H"]  <- 1
+R_results1.1[R_results1 == "S1"] <- 2
+R_results1.1[R_results1 == "S2"] <- 3
+R_results1.1[R_results1 == "D"]  <- 4
+identical(R_results1.1 |> as.numeric(), R_results2)
 identical(R_results2, C_results1 |> as.numeric())
 identical(R_results2, C_results2[, 1])
 identical(C_results2[, 1], C_results3[, 1])
 identical(C_results3[, 1], C_results4[, 1])
-identical(C_results4[, 1], C_results5[, 1])
+identical(C_results4[, 1], C_results5[, 1]) # integer vs numeric
+testthat::expect_equal(C_results4, C_results5)
 
 #------------------------------------------------------------------------------#
 
@@ -314,6 +322,10 @@ sample_RvC <- bench::mark(
   "R_2" = sampleV2(
     m_trans_probs = m_trans_probs2,
     v_states_index = v_states_index
+  ),
+  "C0" = sampleC0(
+    m_trans_probs = m_trans_probs1,
+    v_states_names = v_states_names
   ),
   "C_1" = sampleC1(
     m_trans_probs = m_trans_probs2
@@ -344,6 +356,10 @@ sample_RvC2 <- microbenchmark::microbenchmark(
     m_trans_probs = m_trans_probs2,
     v_states_index = v_states_index
   ),
+  "C0" = sampleC0(
+    m_trans_probs = m_trans_probs1,
+    v_states_names = v_states_names
+  ),
   "C_1" = sampleC1(
     m_trans_probs = m_trans_probs2
   ),
@@ -363,3 +379,4 @@ sample_RvC2 <- microbenchmark::microbenchmark(
 
 sample_RvC2
 plot(sample_RvC2)
+saveRDS(object = sample_RvC2, file = "sample_RvC2")

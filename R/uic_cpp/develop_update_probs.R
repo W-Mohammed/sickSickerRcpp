@@ -392,3 +392,4 @@ update_probs_RvC2 <- microbenchmark::microbenchmark(
 
 update_probs_RvC2
 plot(update_probs_RvC2)
+saveRDS(object = update_probs_RvC2, file = "update_probs_RvC2")

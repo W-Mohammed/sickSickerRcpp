@@ -5,14 +5,13 @@
 // Like the R's 'V' version of the function, 'C0' utilizes named vector
 //
 // [[Rcpp::export]]
-Rcpp::NumericVector calc_effsC0(
-    Rcpp::CharacterVector v_occupied_state,
-    Rcpp::NumericVector v_states_utilities,
-    Rcpp::NumericMatrix m_indi_features,
-    Rcpp::NumericVector v_util_coeffs,
-    Rcpp::NumericVector v_util_t_decs,
-    Rcpp::NumericVector v_time_in_state,
-    double cycle_length = 1) {
+Rcpp::NumericVector calc_effsC0(const Rcpp::CharacterVector& v_occupied_state,
+                                const Rcpp::NumericVector& v_states_utilities,
+                                const Rcpp::NumericMatrix& m_indi_features,
+                                const Rcpp::NumericVector& v_util_coeffs,
+                                const Rcpp::NumericVector& v_util_t_decs,
+                                const Rcpp::NumericVector& v_time_in_state,
+                                const double cycle_length = 1) {
   
   int n_rows = m_indi_features.nrow();
   int n_cols = m_indi_features.ncol();
