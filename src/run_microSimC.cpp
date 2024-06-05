@@ -234,7 +234,7 @@ arma::vec calc_discount_wtsC(const double discount_rate,
 Rcpp::List run_microSimC1(const arma::ivec& v_starting_states,
                           const int num_i,
                           const int num_cycles,
-                          arma::mat& m_indi_features,
+                          arma::mat m_indi_features,
                           const arma::ivec& v_states_index,
                           const arma::colvec& v_states_costs,
                           const arma::colvec& v_cost_coeffs,
@@ -251,8 +251,8 @@ Rcpp::List run_microSimC1(const arma::ivec& v_starting_states,
   Rcpp::Function set_seed("set.seed");
   
   // declare R's print and cat functions for updates and debugging:
+  Rcpp::Function print("print");
   Rcpp::Function cat("cat");
-  Rcpp::Function paste("paste");
   
   // declare transitions, costs, and effects matrices:
   arma::imat m_States(num_i, (num_cycles + 1), arma::fill::zeros);
@@ -389,7 +389,7 @@ Rcpp::List run_microSimC1(const arma::ivec& v_starting_states,
 Rcpp::List run_microSimC2(const arma::ivec& v_starting_states,
                           const int num_i,
                           const int num_cycles,
-                          arma::mat& m_indi_features,
+                          arma::mat m_indi_features,
                           const arma::ivec& v_states_index,
                           const arma::colvec& v_states_costs,
                           const arma::colvec& v_cost_coeffs,
@@ -532,7 +532,7 @@ Rcpp::List run_microSimC2(const arma::ivec& v_starting_states,
 
 // update_probsC1 (function name in update_probsC.cpp)
 //
-// Like the R's 'V' version of the function, 'C1' utilizes named vector
+// Like R's 'V' version of the function, 'C1' utilizes named vector
 //
 Rcpp::NumericMatrix update_probsC0(const Rcpp::CharacterVector& v_states_names,
                                    const Rcpp::CharacterVector& v_occupied_state,
@@ -582,7 +582,7 @@ Rcpp::NumericMatrix update_probsC0(const Rcpp::CharacterVector& v_states_names,
 
 // sampleC0 (function name in sampleC.cpp)
 //
-// Like the R's 'V' version of the function, 'C0' utilizes named vector
+// Like R's 'V' version of the function, 'C0' utilizes named vector
 //
 Rcpp::CharacterVector sampleC0(const Rcpp::NumericMatrix& m_trans_probs,
                                const Rcpp::CharacterVector& v_states_names) {
@@ -658,7 +658,7 @@ Rcpp::CharacterVector sampleC0(const Rcpp::NumericMatrix& m_trans_probs,
 
 // calc_costsC0 (function name in calc_costsC.cpp)
 //
-// Like the R's 'V' version of the function, 'C0' utilizes named vector
+// Like R's 'V' version of the function, 'C0' utilizes named vector
 //
 Rcpp::NumericVector calc_costsC0(const Rcpp::CharacterVector v_occupied_state,
                                  const Rcpp::NumericVector v_states_costs,
@@ -700,7 +700,7 @@ Rcpp::NumericVector calc_costsC0(const Rcpp::CharacterVector v_occupied_state,
 
 // calc_effsC0 (function name in calc_effsC.cpp)
 //
-// Like the R's 'V' version of the function, 'C0' utilizes named vector
+// Like R's 'V' version of the function, 'C0' utilizes named vector
 //
 Rcpp::NumericVector calc_effsC0(const Rcpp::CharacterVector& v_occupied_state,
                                 const Rcpp::NumericVector& v_states_utilities,
@@ -787,7 +787,7 @@ Rcpp::NumericVector calc_discount_wtsC0(const double discount_rate,
 Rcpp::List run_microSimC0(const Rcpp::CharacterVector& v_starting_states,
                           const int num_i,
                           const int num_cycles,
-                          Rcpp::NumericMatrix& m_indi_features,
+                          Rcpp::NumericMatrix m_indi_features,
                           const Rcpp::CharacterVector& v_states_names,
                           const Rcpp::NumericVector& v_states_costs,
                           const Rcpp::NumericVector& v_cost_coeffs,
@@ -798,8 +798,7 @@ Rcpp::List run_microSimC0(const Rcpp::CharacterVector& v_starting_states,
                           const double discount_rate_costs,
                           const double discount_rate_QALYs,
                           const double cycle_length = 1,
-                          const int starting_seed = 1,
-                          const int age_column_index = 0) {
+                          const int starting_seed = 1) {
   // declare R's set.seed function to control setting the seed number:
   Rcpp::Function set_seed("set.seed");
   
