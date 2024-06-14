@@ -1,4 +1,4 @@
-## @knitr solution_sampleV_function
+## @knitr micro_compare_vect_functions
 
 # 0. Execute the lines below.
 ## clear R's session memory (Global Environment) 
@@ -6,18 +6,18 @@ rm(list = ls())
 
 ## General parameters
 seed    <- 1234                          # random number generator state
-num_sim <- 1e6                           # number of simulated individuals
+num_i <- 1e6                             # number of simulated individuals
 v_states_names <- c("H","S1", "S2", "D") # the model states: Healthy (H), Sick (S1), Sicker (S2), Dead (D)
 set.seed(seed)                           # set the seed to ensure reproducible samples below
 v_occupied_state <- sample(              # sample current health state
   x       = v_states_names,              # from the four health states
-  size    = num_sim,                     # sample a state for each of the simulated individuals
+  size    = num_i,                       # sample a state for each of the simulated individuals
   replace = TRUE,                        # allow sampled states to be re-sampled
   prob    = c(0.75, 0.20, 0.05, 0)       # sample 75% as healthy, 20% as sick, and 5% as sicker
 )
 v_time_in_state  <- sample(              # sample time in current health state
   x       = 1:10,                        # for values between 1 and 10
-  size    = num_sim,                     # sample time in state for each of the simulated individuals
+  size    = num_i,                       # sample time in state for each of the simulated individuals
   replace = TRUE,                        # allow sampled states to be re-sampled
   prob    = rep(                         # values 1 to 10 will have equal chances of being sampled
     x     = 1/length(1:10),              # the chance of sampling any the values is 1/the number of values
@@ -105,7 +105,7 @@ m_trans_probs <- update_probsV(        # generate transition probabilities matri
 ) 
 
 # Functions:
-mat_mult_func <- function(m_trans_probs = m_trans_probs) {
+matrix_cumsum <- function(m_trans_probs = m_trans_probs) {
   set.seed(1)
   # create an upper triangular matrix of ones
   m_upper_tri <- upper.tri(
@@ -118,24 +118,7 @@ mat_mult_func <- function(m_trans_probs = m_trans_probs) {
   return(m_cum_probs)
 }
 
-mat_mult_func2 <- function(m_trans_probs = m_trans_probs) {
-  set.seed(1)
-  # create a lower triangular matrix of ones
-  m_lower_tri <- matrix(
-    lower.tri(
-      x = diag(ncol(m_trans_probs)),
-      diag = TRUE
-    ), 
-    ncol = ncol(m_trans_probs), 
-    byrow = TRUE
-  )
-  # create matrix with row-wise cumulative transition probabilities
-  m_cum_probs <- m_trans_probs %*% m_lower_tri
-  
-  return(m_cum_probs)
-}
-
-loop_func <- function(m_trans_probs = m_trans_probs) {
+loop_cumsum <- function(m_trans_probs = m_trans_probs) {
   set.seed(1)
   # loop through columns to estimate cumulative transition probabilities
   m_cum_probs <- m_trans_probs
@@ -146,7 +129,7 @@ loop_func <- function(m_trans_probs = m_trans_probs) {
   return(m_cum_probs)
 }
 
-apply_func <- function(m_trans_probs = m_trans_probs) {
+apply_cumsum <- function(m_trans_probs = m_trans_probs) {
   set.seed(1)
   # use apply to estimate cumulative transition probabilities
   m_cum_probs <- t(apply(m_trans_probs, 1, cumsum))
@@ -154,7 +137,7 @@ apply_func <- function(m_trans_probs = m_trans_probs) {
   return(m_cum_probs)
 }
 
-eline_func <- function (probs = m_trans_probs, m = 1) {
+eline_cumsum <- function(probs = m_trans_probs, m = 1) {
   set.seed(1)
   d <- dim(probs)
   k <- d[2]
@@ -165,28 +148,32 @@ eline_func <- function (probs = m_trans_probs, m = 1) {
   t(U)
 }
 
-identical(loop_func(m_trans_probs = m_trans_probs),
-          eline_func(probs = m_trans_probs))
-identical(apply_func(m_trans_probs = m_trans_probs),
-          eline_func(probs = m_trans_probs))
-identical(mat_mult_func(m_trans_probs = m_trans_probs),
-          loop_func(m_trans_probs = m_trans_probs) |> `colnames<-`(NULL))
-identical(mat_mult_func(m_trans_probs = m_trans_probs),
-          mat_mult_func2(m_trans_probs = m_trans_probs))
+identical(loop_cumsum(m_trans_probs = m_trans_probs),
+          eline_cumsum(probs = m_trans_probs))
+identical(apply_cumsum(m_trans_probs = m_trans_probs),
+          eline_cumsum(probs = m_trans_probs))
+identical(matrix_cumsum(m_trans_probs = m_trans_probs),
+          loop_cumsum(m_trans_probs = m_trans_probs) |> `colnames<-`(NULL))
+
+bench::mark(
+  "matrix_cumsum" = matrix_cumsum(m_trans_probs = m_trans_probs),
+  "loop_cumsum" = loop_cumsum(m_trans_probs = m_trans_probs),
+  "eline_cumsum" = eline_cumsum(probs = m_trans_probs),
+  "apply_cumsum" = apply_cumsum(m_trans_probs = m_trans_probs),
+  check = FALSE
+)
 
 results <- microbenchmark::microbenchmark(
-  "mat" = mat_mult_func(m_trans_probs = m_trans_probs),
-  "mat2" = mat_mult_func2(m_trans_probs = m_trans_probs),
-  "loop" = loop_func(m_trans_probs = m_trans_probs),
-  "eline" = eline_func(probs = m_trans_probs),
-  "apply" = apply_func(m_trans_probs = m_trans_probs)
+  "matrix_cumsum" = matrix_cumsum(m_trans_probs = m_trans_probs),
+  "loop_cumsum" = loop_cumsum(m_trans_probs = m_trans_probs),
+  "eline_cumsum" = eline_cumsum(probs = m_trans_probs),
+  "apply_cumsum" = apply_cumsum(m_trans_probs = m_trans_probs)
 )
 results
 # Unit: milliseconds
-# expr        min        lq       mean     median         uq       max neval
-# mat     21.9105   26.1567   45.46324   29.27955   35.32365  603.3019   100
-# mat2    22.6374   25.9278   35.14190   28.26885   37.12145  215.3022   100
-# loop    67.5821   92.5681  167.10640  111.04605  155.73250  637.9308   100
-# eline   96.9682  136.7572  209.37509  150.63835  195.68390  695.3226   100
-# apply 2430.5633 3007.2595 3483.54759 3634.91000 3895.88205 4924.6142   100
+# expr                  min        lq       mean     median         uq       max neval
+# matrix_cumsum     21.9105   26.1567   45.46324   29.27955   35.32365  603.3019   100
+# loop_cumsum       67.5821   92.5681  167.10640  111.04605  155.73250  637.9308   100
+# eline_cumsum      96.9682  136.7572  209.37509  150.63835  195.68390  695.3226   100
+# apply_cumsum.   2430.5633 3007.2595 3483.54759 3634.91000 3895.88205 4924.6142   100
 plot(results)

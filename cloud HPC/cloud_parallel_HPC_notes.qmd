@@ -1,0 +1,255 @@
+---
+title: 'Cloud Parallel Computing <img src="logo_concise.PNG" align="right" width="120" />' 
+subtitle: "Evaluating `R` code in parallel"
+author: 
+  - name: "Wael Mohammed"
+    affiliation: 
+      - "Dark Peak Analyics"
+      - "University of Sheffield"
+format:
+  html:
+    toc: true
+    toc-depth: 5
+    self-contained: true
+  pdf:
+    documentclass: article
+    number-sections: true
+    toc: true
+    include-in-header:
+      text: |
+        \usepackage{fancyhdr}
+        \pagestyle{fancy}
+---
+
+## Introduction:
+
+This document discusses creating, interacting with and using cloud computing. 
+
+## Create an account in Linode:
+
+-   Go to <https://login.linode.com/signup> and register for a new account. At the time of writing, Linode was running a promotion where new users are given *\$100* worth of credit to spend within the platform.
+
+Warning: Remember to shut down and delete all Linode instances once done with them to avoid unintended costs.
+
+- Log in to the Linode account at <https://login.linode.com/login>.
+
+## Creating a Linode instance:
+
+From the Linode dashboard:
+
+-   Select **`Linodes`** from the left side menu.
+-   Click on **`Create Linode`**, and several tabs will populate the page.
+
+![Linode Dashboard](linode/linode_dashboard.png)
+
+### Distributions:
+
+-   **Choose a Distribution**: Select a suitable operating system image.
+    -   Select `Ubuntu 24.04 LTS` from the list of images.
+
+![Selecting a Linode Operating System](linode/linode_distribution.png)
+
+-   **Region**: Choose the closest location.
+    -   Choose `London, UK (eu-west)` from the list of regions.
+
+![Choosing a Linode Region](linode/linode_region.png)
+
+-   **Linode Plan**: Choose an appropriate computing node.
+    -   Choose `Dedicated 8 GB` from the list of plans.
+
+![Choosing a Linode Plan](linode/linode_plan.png) 
+
+-   Linode **Details**: 
+    -   **Linode Label**: Give the cloud computing instance a meaningful label.
+        -   Use `UIC_4_8GB`
+        
+![Labelling a Linode Instance](linode/linode_label.png)
+
+   -   **Add Tags**: A tag if required.
+   -   **Root Password**: Set a root password.
+   -   **SSH Keys**: Click `Add An SSH Key`, paste your `SSH public key` and label it. To learn more about using SSH and SSH keys, check:
+        -   <https://www.linode.com/docs/guides/connect-to-server-over-ssh-on-windows/>
+        -   <https://www.youtube.com/watch?v=ZVMckBHd7WA>
+    
+![Using SSH Key](linode/linode_ssh.png)
+
+### Initialise Linode Instance:
+
+Click `Create Linode` to confirm the details and spin the chosen instance.
+   
+![Create Linode](linode/linode_create.png)
+ 
+The Linode instance will start spinning, and the page will show  "`Provisioning`", "`Booting`" and "`Running`".
+ 
+![Linode Provisioning](linode/linode_PROVISIONING.png)
+
+![Linode Booting](linode/linode_BOOTING.png)
+
+The Linode instance is ready once it has finished `Booting`; when it is shown that it is `Running`, 
+
+![Linode Running](linode/linode_RUNNING.png)
+ 
+## Accessing a Linode instance:
+
+The Linode instance can be accessed by `ssh`-ing to the instance. Two methods are demonstrated below.
+
+### Accessing a Linode instance from the terminal:
+
+- From the Linode dashboard copy the **SSH Access** (**`ssh root\@xxx.xxx.xx.xx`**), _ssh root@88.80.188.207_ for the *UIC_4_8GB*.
+- Paste on and execute the command from macOS/Linux terminal.
+
+![`SSH`-ing into the Linode Instance](linode/linode_login1.png)
+
+![Accept Instance as one of the known hosts](linode/linode_login2.png)
+
+![Linode Instance Terminal](linode/linode_login3.png)
+
+The *LISH Console via SSH* allows users to log in to the Linode instance from the Linode SSH Console.
+
+## Moving files to/from the Linode instance: {#sec-move-files}
+
+The following commands are expected to be run from the local machine's terminal, not the Linode instance.
+
+```{bash}
+# Move one file from the current folder to the root of the instance:
+scp cloud_instance_setup.sh root@xxx.xxx.xxx.xxx:
+
+# Move one file from the current folder to a folder 'microSim' located in the root of the instance:
+scp cloud_instance_setup.sh root@xxx.xxx.xxx.xxx:microSim/
+
+# To move a folder from the current directory to the root of the instance:
+scp -r r4he_uic/ root@xxx.xxx.xxx.xxx:
+```
+
+![Copy to Linode](linode/linode_copyTo.png)
+
+![Copy to Linode](linode/linode_copyTo2.png)
+
+```{bash}
+# To move a file from the Linode instance to our local computer:
+scp root@xxx.xxx.xxx.xxx:file_name .
+```
+
+![Copy from Linode](linode/linode_copyFrom.png)
+
+To learn more about moving files from and to a remote instance, check <https://www.youtube.com/watch?v=lMC5VNoZFhg&t=105s>.
+
+## Working on the Linode instance:
+
+### Installing R:
+
+Instructions on how to add the latest R version can be found at <https://cran.r-project.org/bin/linux/ubuntu/fullREADME.html>.
+
+Run the following code from the Linode instance terminal to install `R` and some of the required `R packages`. 
+
+```{bash}
+# Update and upgrade the system
+sudo apt update && apt upgrade -y
+
+# Install software-properties-common to manage repositories
+sudo apt install software-properties-common -y
+
+# Update and upgrade the system again after installing the add-apt-repository
+sudo apt update && apt upgrade -y
+
+# Add the R repository appropriate for the Ubuntu release $(lsb_release -cs)
+sudo add-apt-repository "deb https://cloud.r-project.org/bin/linux/ubuntu $(lsb_release -cs)-cran40/" -y
+
+# Import the R repository signing key
+wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | tee -a /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc
+
+# Update and upgrade the system again after adding new repository
+sudo apt update && apt upgrade -y
+
+# Install R base development package
+sudo apt install r-base-dev -y
+
+# Install R packages
+R -e "install.packages(c('future', 'purrr', 'furrr', 'ggplot2', 'Rcpp', 'RcppArmadillo', 'here', 'microbenchmark', 'bench', 'testthat'))"
+```
+
+The above commands are saved in the `bash` file `cloud_instance_setup.sh`". The "`cloud_instance_setup.sh`" script allows the execution of all commands by using the command `sudo bash ./cloud_instance_setup.sh`.
+
+![cloud_instance_setup.sh](linode/linode_bash0.png)
+
+This command assumes that the `bash` file `cloud_instance_setup.sh` is in the working directory of the Linode instance. See @sec-move-files for how to move files to and from the Linode instance.
+
+![Executing the cloud_instance_setup.sh](linode/linode_bash1.png)
+
+![Executing the cloud_instance_setup.sh](linode/linode_bash2.png)
+
+### Running Rscripts on the Linode instance: {#sec-run-Rscript}
+
+The command `Rscript` is used to execute `R scripts`. The screenshots below showcase running the `R script` that compares parallel execution methods, namely "forking" and "PSOCK". The required code is in the script `cloud_parallel_terminal.R`.
+
+![Executing the cloud_instance_setup.sh](linode/linode_psa1.png)
+
+The `cloud_parallel_terminal.R` script defines two versions of the `run_psa_parallel()` functions. The first function utilizes the `furrr` and `future` packages; whereas, the second employs the `parallel` function.
+
+The following screenshots represent the outputs from running the `R` script `cloud_parallel_terminal.R`.
+
+![Executing the cloud_instance_setup.sh](linode/linode_psa1.png)
+
+![Executing the cloud_instance_setup.sh](linode/linode_psa2.png)
+
+![Executing the cloud_instance_setup.sh](linode/linode_psa3.png)
+
+![Executing the cloud_instance_setup.sh](linode/linode_psa4.png)
+
+![Executing the cloud_instance_setup.sh](linode/linode_psa5.png)
+
+![Executing the cloud_instance_setup.sh](linode/linode_psa6.png)
+
+### Processing local R code remotely without moving any files
+
+This section briefly discusses sending `R` code from an `R` session running on the local machine (the user's laptop or PC) to be executed on a remote cluster. This process does not require the user to interact directly with the remote cluster (moving files to the cluster and running them as in @sec-move-files and @sec-run-Rscript). 
+
+The process is powered by the `furrr` and `future` packages, and the information needed for the `future` package to establish a connection with the cluster is the instance's **`Public IP Address`**.
+
+The code required to demonstrate dispatching and processing code from an `R` session running locally to a Linode instance is described in detail in the `R` script `cloud_parallel_remote.R`.
+
+![Linode Instance Public IP Address](linode/linode_ip.png)
+
+The command `top -i` or `htop` can be executed on the Linode instance to monitor when or check that the remote execution of `R` code is running on the Linode.
+
+![Running the htop command](linode/linode_remote_htop.png)
+
+The `htop` command displays a dynamic task-manager-like interface to show the running processes and their CPU and memory usage, among other statistics. 
+
+![Linode Instance - `htop`](linode/linode_remote_htop2.png)
+
+The command `htop` is used below to monitor the execution of the code sent from the `R` script `cloud_parallel_remote.R`. This code involves running `100` PSA iterations on the Linode instance.
+
+![`cloud_parallel_remote.R`](linode/linode_remote.png)
+
+The connection credentials include the SSH private key and the Linode instance Public IP Address.
+
+![Adding the Linode Instance IP Address](linode/linode_remote2.png)
+
+The screenshot below displays the `htop` command (running on the Linode instance terminal) next to the `R` session (running on the local PC). The parallel execution code appears in `R`'s console but has yet to be executed.
+
+![Local `R` Session Vs Remote Linode Instance Terminal](linode/linode_remote3.png)
+
+The screenshot below shows the start of the execution of the `R` code. The second line shown in the console (in the screenshot below) represents the part of the code where `R` establishes a connection with the Linode instance based on its IP Address.
+
+![Connecting to the Linode Instance](linode/linode_remote4.png)
+
+The parallel execution plan `future::plan`, the code in the console just below the remote connection line, represents the instructions for executing the PSA code on the Linode instance. This plan would apply to multiple clusters if more than one `instance IP Address` is saved in the "`public_ip`" object (each representing a cluster). This point is discussed further and showcased in the `cloud_parallel_remote.R` script.
+
+![Running Local Code on Remote Instance](linode/linode_remote5.png)
+
+The execution of `100` PSA iterations from the local `R` session onto the Linode instance took around `77` seconds.
+
+![Returning Results from Remote Instance to Local `R` Session](linode/linode_remote6.png)
+
+After the parallel code execution finishes, the Linode instance becomes idle, and the `R` processes (running on the remote instance, seen in the `htop` charts in the previous screenshots) are terminated. The' future' package controls the termination of the children `R` processes.
+
+![Linode Instance Idle](linode/linode_remote7.png)
+
+______
+
+We hope you find the content useful!
+
+Robert Smith, Wael Mohammed & Paul Schneider 
+
+Copyright &#169; 2024 [Dark Peak Analytics Ltd](https://www.darkpeakanalytics.com)
