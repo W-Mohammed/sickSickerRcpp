@@ -336,7 +336,7 @@ future::plan()                     # confirm the plan is back to sequential
 # 0. Source the Healthy-Sick-Sicker-Dead microsimulation model and PSA functions:----
 
 source(
-  file = file.path(here::here(), "extra_materials", "11_microsim", "cloud_parallel_remote_src.R")
+  file = file.path(here::here(), "cloud HPC", "cloud_parallel_remote_src.R")
 )
 
 # 1. Run and time the PSA locally, no clusters, but 4 workers:----

@@ -1,5 +1,5 @@
 ---
-title: 'Cloud Parallel Computing <img src="logo_concise.PNG" align="right" width="120" />' 
+title: 'Cloud Parallel Computing' 
 subtitle: "Evaluating `R` code in parallel"
 author: 
   - name: "Wael Mohammed"
@@ -250,6 +250,4 @@ ______
 
 We hope you find the content useful!
 
-Robert Smith, Wael Mohammed & Paul Schneider 
-
-Copyright &#169; 2024 [Dark Peak Analytics Ltd](https://www.darkpeakanalytics.com)
+Wael Mohammed

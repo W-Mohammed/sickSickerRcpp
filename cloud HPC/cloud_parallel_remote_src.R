@@ -3,7 +3,7 @@
 # This script sources the 
 # Source the Healthy-Sick-Sicker-Dead microsimulation model dependencies functions
 source(
-  file = file.path(here::here(), "code_chunks", "11_microsim", "parallel_terminal_src.R")
+  file = file.path(here::here(), "cloud HPC", "parallel_terminal_src.R")
 )
 
 ## Run Microsimulation function
